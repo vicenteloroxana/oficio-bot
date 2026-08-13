@@ -268,9 +268,13 @@ Bot: ✅ Logo guardado. Aparecerá en
   OJO: `docs`, `refactor`, `test`, `ci` son tipos de COMMIT pero NO de
   rama — esos cambios van en `chore/`. Ej: rama `chore/adr-iniciales`
   con commits `docs(constitution): ...`.
-- Flujo: crear rama → commitear → push de la rama → abrir PR → merge.
-  Con 0 aprobaciones requeridas, el PR se puede mergear sin esperar a
-  nadie, pero el PR es obligatorio: es el registro de qué entró y por qué.
+- Flujo: crear rama → commitear → push de la rama → abrir PR → merge →
+  borrar la rama (local y remota). Con 0 aprobaciones requeridas, el PR
+  se puede mergear sin esperar a nadie, pero el PR es obligatorio: es el
+  registro de qué entró y por qué. Una rama solo se borra si el merge
+  fue exitoso (PR en estado MERGED y los commits ya están en `main`) —
+  usar `/cleanup-branch`, que verifica esto antes de borrar en ambos
+  lados.
 - Mensajes de commit según `docs/commit-conventions.md`
   (Conventional Commits).
 - Si por error ya hay cambios sin commitear sobre `main`: crear la rama

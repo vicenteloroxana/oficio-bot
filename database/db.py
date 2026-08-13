@@ -9,6 +9,8 @@ from typing import AsyncIterator
 
 import aiosqlite
 
+from database.models import Usuario
+
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
 
 SCHEMA = """
@@ -59,3 +61,23 @@ async def get_connection() -> AsyncIterator[aiosqlite.Connection]:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         yield db
+
+
+async def get_usuario(telegram_id: int) -> Usuario | None:
+    """Busca un usuario registrado por su telegram_id. None si no existe."""
+    async with get_connection() as db:
+        cursor = await db.execute(
+            "SELECT * FROM usuarios WHERE telegram_id = ?", (telegram_id,)
+        )
+        fila = await cursor.fetchone()
+        return Usuario(**dict(fila)) if fila else None
+
+
+async def crear_usuario(usuario: Usuario) -> None:
+    """Inserta un usuario nuevo (nombre + oficio, sin logo)."""
+    async with get_connection() as db:
+        await db.execute(
+            "INSERT INTO usuarios (telegram_id, nombre, oficio) VALUES (?, ?, ?)",
+            (usuario.telegram_id, usuario.nombre, usuario.oficio),
+        )
+        await db.commit()

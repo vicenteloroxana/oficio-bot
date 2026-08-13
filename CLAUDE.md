@@ -354,7 +354,9 @@ MAX_LOGO_SIZE_MB=2         # Tamaño máximo de logo en MB
 ```
 
 ## Fases del proyecto
-- **Fase 1 (MVP — 10 días):** presupuesto → PDF → registro de cobro → recordatorio → resumen mensual
+- **Fase 1 (MVP — 10 días):** registro (`/start`) → presupuesto con seña
+  opcional → PDF → registro de cobro → recordatorio → resumen mensual.
+  Desglose tarea por tarea en `docs/backlog.md`.
 - **Fase 2 (post-concurso):** integración Mercado Pago para link de pago de seña
 - **Fase 3 (post-concurso):** soporte WhatsApp vía Meta Cloud API
 

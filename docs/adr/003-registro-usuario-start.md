@@ -21,6 +21,11 @@ en CLAUDE.md) y queda documentado acá el cómo se implementa.
   `/cobrar` para sus propios flujos multi-paso.
 - Si `/start` se ejecuta con un `telegram_id` ya presente en `usuarios`, no
   repite las preguntas — responde con un saludo corto y sigue.
+- El `ConversationHandler` expone `/cancel` como `fallback`: interrumpe el
+  registro en cualquier estado y limpia `context.user_data`. Es el mismo
+  fallback que van a reutilizar `/presupuesto` y `/cobrar` (ver
+  Consecuencias) — sin él, un usuario que escribe otra cosa a mitad de flujo
+  queda trabado esperando una respuesta que no va a dar.
 - `/presupuesto` NO hace auto-registro silencioso: si se ejecuta sin que el
   usuario exista en `usuarios`, responde pidiendo `/start` primero, en vez de
   crear un usuario a medias por atrás sin que el trabajador lo sepa.

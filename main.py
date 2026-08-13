@@ -7,10 +7,10 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application
 
 from database.db import init_db
+from handlers.registro import registro_handler
 
 load_dotenv()
 
@@ -19,14 +19,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Responde al comando /start con un mensaje de bienvenida."""
-    await update.message.reply_text(
-        "👋 ¡Hola! Soy tu asistente de gestión.\n\n"
-        "Usá /presupuesto para crear un presupuesto nuevo."
-    )
 
 
 async def post_init(application: Application) -> None:
@@ -42,7 +34,7 @@ def main() -> None:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN en las variables de entorno")
 
     app = Application.builder().token(token).post_init(post_init).build()
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(registro_handler)
 
     logger.info("Bot iniciado")
     app.run_polling()

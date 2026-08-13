@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Oficio Bot — datos generados en runtime, nunca al repo
+db.sqlite3
+oficio_bot.db
+/pdfs/
+assets/logos/

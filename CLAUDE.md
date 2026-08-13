@@ -15,7 +15,7 @@ recordatorios automáticos si no pagan → registra el cobro final.
 - Bot: python-telegram-bot (async, webhooks)
 - PDF: WeasyPrint (HTML/CSS → PDF)
 - Pagos: Mercado Pago SDK Python (fase 2, no implementar aún)
-- Base de datos: SQLite (aio-sqlite para async)
+- Base de datos: SQLite (aiosqlite para async)
 - Hosting: Railway (deploy automático desde GitHub)
 - Variables de entorno: python-dotenv
 

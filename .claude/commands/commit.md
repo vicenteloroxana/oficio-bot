@@ -8,18 +8,24 @@ el doc es la fuente de la regla.
 
 1. Ejecutá `git status` y `git diff --staged` (si no hay nada staged,
    mostrá `git diff` y preguntá qué agregar con `git add`).
-2. Si hay cambios de naturaleza distinta mezclados en el staging
-   (ej: código + docs no relacionados), sugerí separarlos en commits
+2. Aplicá el árbol de decisión de `docs/commit-conventions.md` a los
+   cambios en staging. La spec de Conventional Commits es explícita:
+   si el staging podría tener razonablemente más de un tipo, separalo
+   en tantos commits como tipos claramente apropiados existan. Código
+   y docs del mismo cambio comparten tipo (el doc lo confirma: "si el
+   commit toca código Y documentación, el tipo lo define el código")
+   — eso no se separa. Separá cuando el árbol de decisión, aplicado a
+   los cambios mezclados, da tipos distintos (ej: un handler nuevo es
+   `feat`, un typo corregido en un doc no relacionado es `docs` — dos
+   tipos, dos commits). Si corresponde separar, proponé los commits
    distintos en lugar de forzar un solo tipo.
-3. Aplicá el árbol de decisión de `docs/commit-conventions.md` para
-   elegir el `<tipo>`.
-4. Elegí el `<scope>` según la tabla del doc si el cambio cae
+3. Elegí el `<scope>` según la tabla del doc si el cambio cae
    claramente en un módulo. Si toca varios módulos, omitilo.
-5. Redactá la descripción: imperativo, minúsculas, sin punto final,
+4. Redactá la descripción: imperativo, minúsculas, sin punto final,
    en español.
-6. Si el cambio rompe compatibilidad hacia atrás, marcalo con `!`
+5. Si el cambio rompe compatibilidad hacia atrás, marcalo con `!`
    después del tipo o agregá footer `BREAKING CHANGE:` (ver doc).
-7. Mostrá el mensaje propuesto completo y esperá confirmación antes
+6. Mostrá el mensaje propuesto completo y esperá confirmación antes
    de ejecutar `git commit`.
 
 ## Formato final
@@ -34,4 +40,5 @@ el doc es la fuente de la regla.
 
 - [ ] ¿El tipo elegido refleja el árbol de decisión, no una corazonada?
 - [ ] ¿La descripción está en imperativo?
-- [ ] ¿Se mezclaron cambios que deberían ir en commits separados?
+- [ ] ¿El staging mezcla cambios que, aplicado el árbol de decisión,
+      caen en más de un tipo?

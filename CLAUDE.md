@@ -96,6 +96,7 @@ oficio-bot/
 | `/resumen` | Resumen del mes actual |
 | `/clientes` | Historial de clientes y trabajos por cliente |
 | `/perfil` | Ver o editar datos del trabajador (nombre, logo) |
+| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro) |
 
 ## Flujos conversacionales — los 4 momentos del bot
 
@@ -126,6 +127,8 @@ Bot: ✅ Listo, ya estás registrado.
 > agrega fricción al primer contacto sin desbloquear nada más.
 > Si `/start` se ejecuta de nuevo con el usuario ya registrado, saluda
 > sin repetir las preguntas (ver ADR-003 para el detalle de implementación).
+> `/cancel` interrumpe el registro en cualquier paso (mismo fallback que
+> van a usar `/presupuesto` y `/cobrar` — ver ADR-003).
 
 ---
 

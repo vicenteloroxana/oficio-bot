@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout -b *)",
+      "Bash(git push -u *)",
+      "Bash(git commit -m *)",
+      "Bash(mkdir -p *)",
+      "Bash(cd *)",
+      "Read(docs/**)",
+      "Read(handlers/**)",
+      "Read(services/**)",
+      "Read(database/**)"
+    ]
+  },
+  "hooks": {
+    "MessageStart": [
+      {
+        "matcher": "prompt|mejorar|reglas",
+        "hooks": [
+          {
+            "type": "suggestion",
+            "text": "🚀 Detecté 'prompt'. Activando Prompt Builder...\n\nVoy a hacerte 5 preguntas (Rol, Contexto, Tarea, Restricciones, Formato) para construir un prompt excelente.\n\nO si prefieres, usá un template directo en `docs/prompts/`"
+          }
+        ]
+      }
+    ]
+  },
+  "context": {
+    "projectDescription": "Bot de Telegram para trabajadores independientes",
+    "restrictionsDefault": [
+      "type hints en TODAS las funciones",
+      "máximo 20 líneas por función",
+      "async/await obligatorio",
+      "Pydantic para validación",
+      "docstrings en español",
+      "no nuevas librerías sin preguntar",
+      "seguir docs/commit-conventions.md"
+    ]
+  }
+}

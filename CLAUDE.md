@@ -295,6 +295,16 @@ Bot: ✅ Logo guardado. Aparecerá en
 - `templates/presupuesto.html` — cambios afectan todos los PDFs generados
 - Cualquier archivo de configuración de Railway
 
+### ADRs (`docs/adr/`)
+- Un ADR nunca se edita para cambiar la decisión que registra — es historial.
+  Si una decisión cambia: ADR nuevo (numeración siguiente) + el viejo pasa a
+  estado `Reemplazado por ADR-00X`.
+- Antes de crear o modificar un ADR — incluso al detectar la discrepancia vía
+  `codebase-memory-mcp` de forma automática — mostrar qué se detectó y por qué
+  se considera cambio de arquitectura (no detalle de implementación), y esperar
+  confirmación. Es una aplicación puntual de la regla general de "preguntar
+  ante ambigüedad" de este documento.
+
 ## Variables de entorno necesarias
 ```
 # Bot

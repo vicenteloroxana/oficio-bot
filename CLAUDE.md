@@ -12,7 +12,8 @@ recordatorios automáticos si no pagan → registra el cobro final.
 
 ## Stack
 - Lenguaje: Python 3.12
-- Bot: python-telegram-bot (async, webhooks)
+- Bot: python-telegram-bot (async, polling en fase 1 / webhooks al deployar
+  en Railway — ver `docs/adr/001-stack-tecnologico.md`)
 - PDF: WeasyPrint (HTML/CSS → PDF)
 - Pagos: Mercado Pago SDK Python (fase 2, no implementar aún)
 - Base de datos: SQLite (aiosqlite para async)

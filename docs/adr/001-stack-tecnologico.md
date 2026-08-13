@@ -11,7 +11,9 @@ simple con CI/CD automático.
 
 ## Decisión
 - **Lenguaje**: Python 3.12
-- **Bot**: python-telegram-bot en modo async, con webhooks (no polling)
+- **Bot**: python-telegram-bot en modo async. Polling en fase 1 (desarrollo
+  local, sin URL pública); migrar a webhooks al deployar en Railway, donde
+  sí hay una URL HTTPS estable para recibirlos.
 - **PDF**: WeasyPrint (HTML/CSS → PDF) para los presupuestos
 - **Base de datos**: SQLite vía aiosqlite (async, sin servidor separado)
 - **Pagos**: Mercado Pago SDK Python — diferido a fase 2, no implementado en el MVP
@@ -21,6 +23,9 @@ simple con CI/CD automático.
 ## Consecuencias
 - Todo el código de handlers es async/await; no se permite código sync bloqueante
   en los handlers (impacta pdf_service y mp_service, que deben exponer wrappers async).
+- Polling funciona en fase 1 sin infraestructura adicional, pero no es lo que
+  se usará en producción — al migrar a webhooks en Railway hay que revisar
+  `main.py` (`run_polling()` → configurar `run_webhook()` con la URL del deploy).
 - SQLite es suficiente para el volumen esperado de un trabajador independiente,
   pero no escala a multi-instancia con escritura concurrente alta; si Railway
   requiere múltiples réplicas, habrá que migrar a Postgres.

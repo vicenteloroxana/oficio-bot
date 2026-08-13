@@ -28,10 +28,12 @@ oficio-bot/
 ├── .gitignore              ← nunca subir .env ni archivos de BD
 ├── .env.example            ← plantilla de variables sin valores reales
 ├── requirements.txt
+├── requirements-dev.txt    ← pytest, hypothesis — solo para desarrollo
 ├── main.py                 ← arranque del bot
 ├── docs/
 │   ├── branch-conventions.md     ← estándar Conventional Branch v1.1.0
 │   └── commit-conventions.md     ← Conventional Commits
+├── tests/                  ← pytest + hypothesis, corre en CI
 ├── handlers/
 │   ├── __init__.py
 │   ├── presupuesto.py      ← flujo conversacional de nuevo presupuesto
@@ -321,6 +323,25 @@ Bot: ✅ Logo guardado. Aparecerá en
 - Docstrings en español para funciones de negocio
 - Máximo 20 líneas por función — extraer si supera
 - No más de 3 niveles de anidación
+
+### Tests
+- Todo handler o función con lógica no trivial (validación, estado,
+  cálculo) lleva sus tests en el mismo PR que lo implementa — no se
+  posterga a un PR aparte. Los handlers triviales (solo responden un
+  mensaje fijo, sin lógica) no lo requieren.
+- Tests con `pytest` + `pytest-asyncio` (código async, ver arriba),
+  en `tests/`, no junto al código de producción.
+- Validaciones con invariantes numéricas o de rango (ej: `monto_sena
+  <= monto_total` en `database/models.py`) usan property-based testing
+  con `hypothesis` en vez de listar casos sueltos a mano — genera
+  inputs aleatorios y prueba la propiedad de forma sistemática.
+- CI (`.github/workflows/tests.yml`) corre la suite en cada PR contra
+  `main` y bloquea el merge si falla. No hay mecanismo automático que
+  tilde `docs/backlog.md` — se marca a mano en el mismo PR; CI es lo
+  que garantiza que un ítem tildado no tiene tests rotos detrás.
+- Dependencias de desarrollo (`pytest`, `hypothesis`, etc.) van en
+  `requirements-dev.txt`, no en `requirements.txt` — ese archivo es
+  solo lo que el bot necesita para correr en producción.
 
 ### Seguridad
 - API keys y tokens NUNCA en código — siempre desde variables de entorno

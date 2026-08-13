@@ -44,28 +44,28 @@ CREATE TABLE IF NOT EXISTS recordatorios (
 """
 
 
-async def init_db() -> None:
+async def init_db(db_path: str = DB_PATH) -> None:
     """Crea las tablas si no existen. Se llama al arrancar el bot."""
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with aiosqlite.connect(db_path) as db:
         await db.executescript(SCHEMA)
         await db.commit()
 
 
 @asynccontextmanager
-async def get_connection() -> AsyncIterator[aiosqlite.Connection]:
+async def get_connection(db_path: str = DB_PATH) -> AsyncIterator[aiosqlite.Connection]:
     """Provee una conexión a la BD para usar con 'async with'.
 
     Configura row_factory para que las filas se lean como dict-like,
     facilitando pasarlas directo a los modelos Pydantic.
     """
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
         yield db
 
 
-async def get_usuario(telegram_id: int) -> Usuario | None:
+async def get_usuario(telegram_id: int, db_path: str = DB_PATH) -> Usuario | None:
     """Busca un usuario registrado por su telegram_id. None si no existe."""
-    async with get_connection() as db:
+    async with get_connection(db_path) as db:
         cursor = await db.execute(
             "SELECT * FROM usuarios WHERE telegram_id = ?", (telegram_id,)
         )
@@ -73,9 +73,9 @@ async def get_usuario(telegram_id: int) -> Usuario | None:
         return Usuario(**dict(fila)) if fila else None
 
 
-async def crear_usuario(usuario: Usuario) -> None:
+async def crear_usuario(usuario: Usuario, db_path: str = DB_PATH) -> None:
     """Inserta un usuario nuevo (nombre + oficio, sin logo)."""
-    async with get_connection() as db:
+    async with get_connection(db_path) as db:
         await db.execute(
             "INSERT INTO usuarios (telegram_id, nombre, oficio) VALUES (?, ?, ?)",
             (usuario.telegram_id, usuario.nombre, usuario.oficio),

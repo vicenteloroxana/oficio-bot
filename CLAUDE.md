@@ -99,6 +99,36 @@ oficio-bot/
 
 ## Flujos conversacionales — los 4 momentos del bot
 
+### Momento 0 — Primer contacto (`/start`)
+```
+Trabajador: /start
+
+Bot: 👋 ¡Hola! Soy tu asistente de gestión.
+
+     Te ayudo a armar presupuestos, registrar cobros y
+     mandar recordatorios de pago — todo sin salir de Telegram.
+
+     Para arrancar, ¿cómo te llamás o cómo se llama tu negocio?
+
+Trabajador: Carlos Rodríguez
+
+Bot: Genial, Carlos. ¿A qué te dedicás? (ej: plomero, electricista, pintor...)
+
+Trabajador: Electricista
+
+Bot: ✅ Listo, ya estás registrado.
+
+     Usá /presupuesto cuando quieras armar uno nuevo.
+     Con /perfil podés agregar tu logo cuando quieras.
+```
+> Registro mínimo: solo nombre y oficio (los datos que van al PDF de
+> presupuesto). El logo es opcional y se difiere a `/perfil` — pedirlo acá
+> agrega fricción al primer contacto sin desbloquear nada más.
+> Si `/start` se ejecuta de nuevo con el usuario ya registrado, saluda
+> sin repetir las preguntas (ver ADR-003 para el detalle de implementación).
+
+---
+
 ### Momento 1 — Crear presupuesto (`/presupuesto`)
 ```
 Trabajador: /presupuesto
@@ -324,7 +354,9 @@ MAX_LOGO_SIZE_MB=2         # Tamaño máximo de logo en MB
 ```
 
 ## Fases del proyecto
-- **Fase 1 (MVP — 10 días):** presupuesto → PDF → registro de cobro → recordatorio → resumen mensual
+- **Fase 1 (MVP — 10 días):** registro (`/start`) → presupuesto con seña
+  opcional → PDF → registro de cobro → recordatorio → resumen mensual.
+  Desglose tarea por tarea en `docs/backlog.md`.
 - **Fase 2 (post-concurso):** integración Mercado Pago para link de pago de seña
 - **Fase 3 (post-concurso):** soporte WhatsApp vía Meta Cloud API
 

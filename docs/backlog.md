@@ -34,11 +34,11 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 1 — Crear presupuesto (`/presupuesto`)
 
-- [ ] `handlers/presupuesto.py` — flujo conversacional (cliente → descripción → monto → seña)
-- [ ] Validar que el usuario exista en `usuarios` (pedir `/start` si no — ver ADR-003)
+- [x] `handlers/presupuesto.py` — flujo conversacional (cliente → descripción → monto → seña)
+- [x] Validar que el usuario exista en `usuarios` (pedir `/start` si no — ver ADR-003)
+- [x] Insertar el `Trabajo` en la BD con estado `presupuestado`
 - [ ] `templates/presupuesto.html` — diseño del PDF (⚠️ no tocar sin preguntar, CLAUDE.md)
 - [ ] `services/pdf_service.py` — generación del PDF con WeasyPrint
-- [ ] Insertar el `Trabajo` en la BD con estado `presupuestado`
 - [ ] Enviar el PDF generado al chat
 - [ ] Confirmar alcance de fase 1 vs. fase 2 (sin link de Mercado Pago todavía)
 

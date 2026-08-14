@@ -336,9 +336,12 @@ Bot: ✅ Logo guardado. Aparecerá en
   con `hypothesis` en vez de listar casos sueltos a mano — genera
   inputs aleatorios y prueba la propiedad de forma sistemática.
 - CI (`.github/workflows/tests.yml`) corre la suite en cada PR contra
-  `main` y bloquea el merge si falla. No hay mecanismo automático que
-  tilde `docs/backlog.md` — se marca a mano en el mismo PR; CI es lo
-  que garantiza que un ítem tildado no tiene tests rotos detrás.
+  `main` y bloquea el merge si falla — es un bloqueo real, configurado
+  como branch protection en GitHub (check `pytest` requerido,
+  `enforce_admins` activo: nadie puede saltearlo, ni la dueña del
+  repo). No hay mecanismo automático que tilde `docs/backlog.md` — se
+  marca a mano en el mismo PR; CI es lo que garantiza que un ítem
+  tildado no tiene tests rotos detrás.
 - Dependencias de desarrollo (`pytest`, `hypothesis`, etc.) van en
   `requirements-dev.txt`, no en `requirements.txt` — ese archivo es
   solo lo que el bot necesita para correr en producción.

@@ -22,3 +22,16 @@ jobs:
 
       - name: Correr tests
         run: pytest tests/ -v
+
+      - name: Recordar actualizar backlog
+        if: success() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo '✅ CI pasó. Si este PR cierra un ítem, tildalo en `docs/backlog.md` antes de mergear.' > /tmp/comment.md
+          echo '' >> /tmp/comment.md
+          echo 'Próximos pendientes en el backlog:' >> /tmp/comment.md
+          echo '```' >> /tmp/comment.md
+          grep -n '^- \[ \]' docs/backlog.md | head -5 >> /tmp/comment.md
+          echo '```' >> /tmp/comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comment.md

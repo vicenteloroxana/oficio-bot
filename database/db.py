@@ -9,7 +9,7 @@ from typing import AsyncIterator
 
 import aiosqlite
 
-from database.models import Usuario
+from database.models import Trabajo, Usuario
 
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
 
@@ -81,3 +81,23 @@ async def crear_usuario(usuario: Usuario, db_path: str = DB_PATH) -> None:
             (usuario.telegram_id, usuario.nombre, usuario.oficio),
         )
         await db.commit()
+
+
+async def crear_trabajo(trabajo: Trabajo, db_path: str = DB_PATH) -> int:
+    """Inserta un trabajo presupuestado y devuelve su id autoincremental."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """INSERT INTO trabajos
+               (usuario_id, cliente_nombre, descripcion, monto_total, monto_sena, estado)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (
+                trabajo.usuario_id,
+                trabajo.cliente_nombre,
+                trabajo.descripcion,
+                trabajo.monto_total,
+                trabajo.monto_sena,
+                trabajo.estado.value,
+            ),
+        )
+        await db.commit()
+        return cursor.lastrowid

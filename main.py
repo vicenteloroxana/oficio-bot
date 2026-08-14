@@ -1,7 +1,7 @@
 """Arranque del bot de Telegram.
 
 Los handlers de cada comando se registran acá a medida que se
-implementan (ver handlers/). Por ahora solo /start está activo.
+implementan (ver handlers/).
 """
 import logging
 import os
@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from telegram.ext import Application
 
 from database.db import init_db
+from handlers.presupuesto import presupuesto_handler
 from handlers.registro import registro_handler
 
 load_dotenv()
@@ -35,6 +36,7 @@ def main() -> None:
 
     app = Application.builder().token(token).post_init(post_init).build()
     app.add_handler(registro_handler)
+    app.add_handler(presupuesto_handler)
 
     logger.info("Bot iniciado")
     app.run_polling()

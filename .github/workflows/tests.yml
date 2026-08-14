@@ -19,6 +19,9 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Instalar librerías nativas de WeasyPrint
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
+
       - name: Instalar dependencias
         run: pip install -r requirements-dev.txt
 

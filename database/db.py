@@ -101,3 +101,12 @@ async def crear_trabajo(trabajo: Trabajo, db_path: str = DB_PATH) -> int:
         )
         await db.commit()
         return cursor.lastrowid
+
+
+async def guardar_pdf_path(trabajo_id: int, pdf_path: str, db_path: str = DB_PATH) -> None:
+    """Registra la ruta del PDF generado para un trabajo ya creado."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE trabajos SET pdf_path = ? WHERE id = ?", (pdf_path, trabajo_id)
+        )
+        await db.commit()

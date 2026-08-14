@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    @page { size: A4; margin: 2.5cm; }
+    body { font-family: sans-serif; color: #222; font-size: 12pt; }
+    header { display: flex; justify-content: space-between; align-items: center;
+             border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 24px; }
+    header img { max-height: 60px; }
+    header .trabajador h1 { font-size: 16pt; margin: 0; }
+    header .trabajador p { margin: 2px 0 0; color: #555; }
+    h2 { font-size: 13pt; margin-top: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    td { padding: 6px 0; border-bottom: 1px solid #ddd; }
+    td.label { color: #555; width: 40%; }
+    td.valor { text-align: right; font-weight: bold; }
+    .total td { font-size: 13pt; border-top: 2px solid #333; border-bottom: none; }
+    footer { margin-top: 40px; font-size: 10pt; color: #777; }
+</style>
+</head>
+<body>
+<header>
+    <div class="trabajador">
+        <h1>$nombre_trabajador</h1>
+        <p>$oficio_trabajador</p>
+    </div>
+    <img src="$logo_src" alt="logo">
+</header>
+
+<h2>Presupuesto</h2>
+<table>
+    <tr><td class="label">Cliente</td><td class="valor">$cliente_nombre</td></tr>
+    <tr><td class="label">Trabajo</td><td class="valor">$descripcion</td></tr>
+    <tr><td class="label">Fecha</td><td class="valor">$fecha</td></tr>
+</table>
+
+<h2>Montos</h2>
+<table>
+    <tr><td class="label">Seña</td><td class="valor">$monto_sena</td></tr>
+    <tr class="total"><td class="label">Total</td><td class="valor">$monto_total</td></tr>
+</table>
+
+<footer>Presupuesto válido por 7 días desde la fecha de emisión.</footer>
+</body>
+</html>

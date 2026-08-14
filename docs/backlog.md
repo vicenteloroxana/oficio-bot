@@ -37,10 +37,10 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [x] `handlers/presupuesto.py` — flujo conversacional (cliente → descripción → monto → seña)
 - [x] Validar que el usuario exista en `usuarios` (pedir `/start` si no — ver ADR-003)
 - [x] Insertar el `Trabajo` en la BD con estado `presupuestado`
-- [ ] `templates/presupuesto.html` — diseño del PDF (⚠️ no tocar sin preguntar, CLAUDE.md)
-- [ ] `services/pdf_service.py` — generación del PDF con WeasyPrint
-- [ ] Enviar el PDF generado al chat
-- [ ] Confirmar alcance de fase 1 vs. fase 2 (sin link de Mercado Pago todavía)
+- [x] `templates/presupuesto.html` — diseño del PDF (⚠️ no tocar sin preguntar, CLAUDE.md)
+- [x] `services/pdf_service.py` — generación del PDF con WeasyPrint
+- [x] Enviar el PDF generado al chat
+- [x] Confirmar alcance de fase 1 vs. fase 2 (sin link de Mercado Pago todavía — CLAUDE.md ya lo documenta, no se implementó)
 
 ## Momento 2 — Recordatorio automático (sin comando)
 
@@ -75,6 +75,14 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [ ] Mecanismo de scheduling para Momento 2 (no hay definición todavía —
       afecta si corre dentro del mismo proceso o necesita un job separado)
 - [ ] Migración de polling a webhooks al deployar en Railway (ver ADR-001)
+- [ ] Runtime nativo de WeasyPrint (Pango/Cairo/GObject) en el entorno de
+      Railway — CI (Ubuntu) ya lo instala vía `apt-get`, pero no está
+      verificado en el contenedor real de deploy. Si Railway usa una imagen
+      sin esas libs del sistema, `services/pdf_service.py` va a fallar en
+      producción aunque los tests pasen en CI.
+- [ ] `assets/logo_default.png` es un placeholder genérico (círculo + silueta,
+      generado con Pillow) para no bloquear el Momento 1 — no es un diseño
+      final. Revisar/reemplazar cuando se implemente `/perfil` (Momento 6).
 
 ## Fase 2 / Fase 3 (fuera de alcance del MVP)
 

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from telegram.ext import ConversationHandler
 
-from database.db import crear_trabajo, crear_usuario, get_connection, get_usuario
+from database.db import crear_trabajo, crear_usuario, get_connection, get_usuario, guardar_pdf_path
 from database.models import Trabajo, Usuario
 import handlers.presupuesto as presupuesto_mod
 from handlers.presupuesto import (
@@ -44,6 +44,7 @@ def _update_con_texto(texto: str) -> MagicMock:
     update.effective_user.id = 1
     update.message.text = texto
     update.message.reply_text = AsyncMock()
+    update.message.reply_document = AsyncMock()
     return update
 
 
@@ -66,10 +67,15 @@ async def test_presupuesto_sin_registro_termina_conversacion(db_path: str, monke
 
 
 @pytest.mark.asyncio
-async def test_flujo_completo_guarda_trabajo(db_path: str, monkeypatch) -> None:
+async def test_flujo_completo_guarda_trabajo(db_path: str, tmp_path, monkeypatch) -> None:
     """El flujo cliente → descripción → monto → seña termina creando el Trabajo."""
+    pdf_falso = tmp_path / "presupuesto.pdf"
+    pdf_falso.write_bytes(b"%PDF-1.4 fake")
+
     monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "generar_pdf", lambda usuario, trabajo: str(pdf_falso))
     await crear_usuario(Usuario(telegram_id=1, nombre="Carlos", oficio="pintor"), db_path)
 
     context = _context()
@@ -88,6 +94,7 @@ async def test_flujo_completo_guarda_trabajo(db_path: str, monkeypatch) -> None:
         fila = await cursor.fetchone()
     assert fila["monto_total"] == 180000
     assert fila["monto_sena"] == 90000
+    assert fila["pdf_path"] == str(pdf_falso)
 
 
 @pytest.mark.asyncio
@@ -112,9 +119,15 @@ async def test_sena_mayor_al_total_repite_el_paso() -> None:
 
 
 @pytest.mark.asyncio
-async def test_sena_no_se_interpreta_monto_cero(db_path: str, monkeypatch) -> None:
+async def test_sena_no_se_interpreta_monto_cero(db_path: str, tmp_path, monkeypatch) -> None:
     """Responder 'no' a la seña guarda el trabajo con monto_sena = 0."""
+    pdf_falso = tmp_path / "presupuesto.pdf"
+    pdf_falso.write_bytes(b"%PDF-1.4 fake")
+
+    monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "generar_pdf", lambda usuario, trabajo: str(pdf_falso))
     await crear_usuario(Usuario(telegram_id=2, nombre="Ana", oficio="electricista"), db_path)
 
     context = _context()

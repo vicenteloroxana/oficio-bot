@@ -18,15 +18,19 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [x] `main.py` — arranque en polling, `post_init` corre `init_db()`
 - [x] `.env.example`
 - [x] ADRs (001 stack, 002 modelo de datos, 003 registro de usuario)
+- [x] CI (`.github/workflows/tests.yml`) — pytest en cada PR contra `main`, bloquea merge si falla
+- [x] `tests/` — pytest + pytest-asyncio (unitarios) y hypothesis (property-based
+      para invariantes numéricas, ej. `monto_sena <= monto_total`)
 
 ## Momento 0 — Primer contacto (`/start`)
 
 - [x] Diálogo documentado (`CLAUDE.md`)
 - [x] Decisión técnica documentada (ADR-003: `ConversationHandler`, registro mínimo)
-- [ ] `handlers/perfil.py` (o un módulo propio) — implementar el `ConversationHandler`
-      de 2 pasos (nombre → oficio) y persistir en `usuarios`
-- [ ] Reemplazar el `start()` actual de `main.py` (solo saluda) por el handler real
-- [ ] Manejar el caso "usuario ya registrado" sin repetir preguntas
+- [x] `handlers/registro.py` — `ConversationHandler` de 2 pasos (nombre → oficio),
+      persiste en `usuarios`, registrado en `main.py`
+- [x] Manejar el caso "usuario ya registrado" sin repetir preguntas
+- [x] `/cancel` como fallback del `ConversationHandler`
+- [x] Tests (`tests/test_registro.py`)
 
 ## Momento 1 — Crear presupuesto (`/presupuesto`)
 

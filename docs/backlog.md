@@ -75,16 +75,30 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [ ] Mecanismo de scheduling para Momento 2 (no hay definición todavía —
       afecta si corre dentro del mismo proceso o necesita un job separado)
 - [ ] Migración de polling a webhooks al deployar en Railway (ver ADR-001)
+      — transversal, no de un Momento puntual; también condiciona
+      Mercado Pago en Fase 2 (ver abajo)
 - [ ] Runtime nativo de WeasyPrint (Pango/Cairo/GObject) en el entorno de
-      Railway — CI (Ubuntu) ya lo instala vía `apt-get`, pero no está
-      verificado en el contenedor real de deploy. Si Railway usa una imagen
-      sin esas libs del sistema, `services/pdf_service.py` va a fallar en
-      producción aunque los tests pasen en CI.
+      Railway, para Momento 1 (`services/pdf_service.py`) — CI (Ubuntu)
+      ya lo instala vía `apt-get`, pero no está verificado en el
+      contenedor real de deploy. Si Railway usa una imagen sin esas
+      libs del sistema, la generación de PDF va a fallar en producción
+      aunque los tests pasen en CI.
 - [ ] `assets/logo_default.png` es un placeholder genérico (círculo + silueta,
       generado con Pillow) para no bloquear el Momento 1 — no es un diseño
       final. Revisar/reemplazar cuando se implemente `/perfil` (Momento 6).
 
 ## Fase 2 / Fase 3 (fuera de alcance del MVP)
 
-- [ ] Integración Mercado Pago (`services/mp_service.py`, link de pago de seña)
+- [ ] Integración Mercado Pago (`services/mp_service.py`, link de pago de seña).
+      Requisitos a resolver cuando se aborde:
+      - SDK gratuito (`mercadopago` en PyPI); el costo real es la comisión
+        por transacción que cobra Mercado Pago, no la API en sí — confirmar
+        % vigente en Argentina antes de presupuestar esto en la propuesta.
+      - Cuenta de Mercado Pago (definir si es la del trabajador o una
+        cuenta recaudadora central — decisión de producto, no técnica).
+      - `MP_ACCESS_TOKEN` (ya placeholder en `.env.example`) + credenciales
+        de sandbox para probar antes de producción.
+      - Notificación de pago vía webhook/IPN de Mercado Pago requiere un
+        endpoint HTTP público — depende de resolver primero la migración
+        de polling a webhooks (ver "Pendiente de decidir" arriba).
 - [ ] Soporte WhatsApp vía Meta Cloud API

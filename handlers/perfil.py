@@ -22,7 +22,16 @@ from database.models import Usuario
 ESPERANDO_CAMPO, ESPERANDO_NOMBRE, ESPERANDO_OFICIO, ESPERANDO_LOGO = range(4)
 
 LOGO_DIR = Path("assets/logos")
-MAX_LOGO_SIZE_MB = float(os.getenv("MAX_LOGO_SIZE_MB", "2"))
+
+
+def _max_logo_size_mb() -> float:
+    """Lee MAX_LOGO_SIZE_MB en el momento de uso, no al importar el módulo.
+
+    main.py importa los handlers antes de llamar load_dotenv() — leer la
+    env var a nivel de módulo congelaría siempre el default (ver precedente
+    en handlers/recordatorio.py:32, que lee REMINDER_DAYS del mismo modo).
+    """
+    return float(os.getenv("MAX_LOGO_SIZE_MB", "2"))
 
 
 def _texto_perfil(usuario: Usuario) -> str:
@@ -71,7 +80,7 @@ async def elegir_campo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         await query.message.reply_text("¿Cuál es tu oficio?")
         return ESPERANDO_OFICIO
     await query.message.reply_text(
-        f"Enviame la imagen de tu logo (PNG o JPG, máximo {MAX_LOGO_SIZE_MB:.0f}MB)"
+        f"Enviame la imagen de tu logo (PNG o JPG, máximo {_max_logo_size_mb():.0f}MB)"
     )
     return ESPERANDO_LOGO
 
@@ -102,10 +111,11 @@ async def recibir_oficio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def recibir_logo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Valida tamaño y guarda el logo enviado como foto."""
+    max_mb = _max_logo_size_mb()
     foto = update.message.photo[-1]
-    if foto.file_size and foto.file_size > MAX_LOGO_SIZE_MB * 1024 * 1024:
+    if foto.file_size and foto.file_size > max_mb * 1024 * 1024:
         await update.message.reply_text(
-            f"La imagen supera los {MAX_LOGO_SIZE_MB:.0f}MB. Probá con una más liviana."
+            f"La imagen supera los {max_mb:.0f}MB. Probá con una más liviana."
         )
         return ESPERANDO_LOGO
 

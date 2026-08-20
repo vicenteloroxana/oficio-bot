@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from database.db import actualizar_usuario, crear_usuario, get_connection, get_usuario
+from database.db import actualizar_usuario, crear_usuario, get_usuario, guardar_logo_path
 from database.models import Usuario
 import handlers.perfil as perfil_mod
 from handlers.perfil import (
@@ -122,17 +122,44 @@ async def test_recibir_oficio_guarda_y_termina(db_path: str, monkeypatch) -> Non
     assert usuario.oficio == "gasista"
 
 
+def _foto_update(file_size: int, telegram_id: int = 1) -> MagicMock:
+    update = MagicMock()
+    update.effective_user.id = telegram_id
+    update.message.photo = [MagicMock(file_size=file_size)]
+    update.message.reply_text = AsyncMock()
+    return update
+
+
 @pytest.mark.asyncio
 async def test_recibir_logo_supera_tamano_maximo_reintenta(monkeypatch) -> None:
     """Una foto que supera MAX_LOGO_SIZE_MB no se guarda y vuelve a pedir la imagen."""
-    monkeypatch.setattr(perfil_mod, "MAX_LOGO_SIZE_MB", 2.0)
-    update = MagicMock()
-    update.effective_user.id = 1
-    update.message.photo = [MagicMock(file_size=3 * 1024 * 1024)]
-    update.message.reply_text = AsyncMock()
+    monkeypatch.setattr(perfil_mod, "_max_logo_size_mb", lambda: 2.0)
+    update = _foto_update(3 * 1024 * 1024)
 
     resultado = await recibir_logo(update, MagicMock())
 
     assert resultado == ESPERANDO_LOGO
     update.message.reply_text.assert_called_once()
     assert "supera" in update.message.reply_text.call_args[0][0].lower()
+
+
+@pytest.mark.asyncio
+async def test_recibir_logo_valido_guarda_y_termina(db_path: str, monkeypatch, tmp_path) -> None:
+    """Una foto dentro del límite se descarga, se persiste logo_path y cierra la conversación."""
+    await crear_usuario(_usuario(), db_path)
+    monkeypatch.setattr(perfil_mod, "_max_logo_size_mb", lambda: 2.0)
+    monkeypatch.setattr(perfil_mod, "guardar_logo_path", partial(guardar_logo_path, db_path=db_path))
+    monkeypatch.setattr(perfil_mod, "LOGO_DIR", tmp_path)
+
+    update = _foto_update(1024)
+    archivo_mock = AsyncMock()
+    archivo_mock.download_to_drive = AsyncMock()
+    update.message.photo[-1].get_file = AsyncMock(return_value=archivo_mock)
+
+    from telegram.ext import ConversationHandler
+    resultado = await recibir_logo(update, MagicMock())
+
+    assert resultado == ConversationHandler.END
+    archivo_mock.download_to_drive.assert_awaited_once_with(str(tmp_path / "1.jpg"))
+    usuario = await get_usuario(1, db_path)
+    assert usuario.logo_path == str(tmp_path / "1.jpg")

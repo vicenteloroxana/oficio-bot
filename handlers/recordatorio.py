@@ -20,7 +20,7 @@ from database.db import (
     marcar_sena_enviada,
     responder_ultimo_recordatorio,
 )
-from database.models import EstadoTrabajo, RespuestaRecordatorio
+from database.models import RespuestaRecordatorio
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,10 @@ async def confirmar_sena_enviada(update: Update, context: ContextTypes.DEFAULT_T
         await query.edit_message_text("Dale, avisame cuando se lo mandes.")
         return
 
+    if await get_trabajo(int(trabajo_id)) is None:
+        await query.edit_message_text("Esta selección ya expiró.")
+        return
+
     await marcar_sena_enviada(int(trabajo_id))
     await query.edit_message_text("✅ Listo, te aviso si no llega el pago a tiempo.")
 
@@ -79,6 +83,9 @@ async def responder_recordatorio(update: Update, context: ContextTypes.DEFAULT_T
     if accion == "recordatorio_pagado":
         await responder_ultimo_recordatorio(trabajo_id, RespuestaRecordatorio.MARCADO_PAGADO)
         trabajo = await get_trabajo(trabajo_id)
+        if trabajo is None:
+            await query.edit_message_text("✅ Marcado como pagado.")
+            return
         await query.edit_message_text(
             f"✅ Marcado como pagado — {trabajo.cliente_nombre}, seña ${trabajo.monto_sena:.0f}."
         )

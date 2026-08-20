@@ -9,7 +9,15 @@ from typing import AsyncIterator
 
 import aiosqlite
 
-from database.models import EstadoTrabajo, FormaPago, Recordatorio, RespuestaRecordatorio, Trabajo, Usuario
+from database.models import (
+    EstadoTrabajo,
+    FormaPago,
+    Recordatorio,
+    ResumenMensual,
+    RespuestaRecordatorio,
+    Trabajo,
+    Usuario,
+)
 
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
 
@@ -195,3 +203,50 @@ async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = 
             (EstadoTrabajo.FINALIZADO.value, forma_pago.value, trabajo_id),
         )
         await db.commit()
+
+
+_CAMPOS_ENTEROS_RESUMEN = ("cantidad_cobrados", "cantidad_pendientes", "cantidad_sin_sena", "total_trabajos")
+
+
+def _normalizar_conteos_resumen(fila: dict) -> dict:
+    """SUM sobre 0 filas da NULL en SQLite: lo normaliza a 0 para los campos enteros."""
+    return {**fila, **{campo: fila[campo] or 0 for campo in _CAMPOS_ENTEROS_RESUMEN}}
+
+
+async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH) -> ResumenMensual:
+    """Resumen agregado del usuario para `mes` (formato 'YYYY-MM'), Momento 4.
+
+    Cobrado: trabajos con cobrado_en en el mes (único filtrado por fecha).
+    Pendiente y sin seña son deuda viva por estado actual, SIN filtro de
+    fecha — un trabajo presupuestado en julio con seña enviada en agosto no
+    debe "desaparecer" de ambos meses por quedar filtrado por creado_en.
+    Solo total_trabajos se filtra por creado_en del mes (trabajos generados).
+    """
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT
+                   COALESCE(SUM(CASE WHEN strftime('%Y-%m', cobrado_en) = ?
+                       THEN monto_total ELSE 0 END), 0) AS monto_cobrado,
+                   SUM(CASE WHEN strftime('%Y-%m', cobrado_en) = ?
+                       THEN 1 ELSE 0 END) AS cantidad_cobrados,
+                   COALESCE(SUM(CASE WHEN estado IN (?, ?)
+                       THEN monto_total - monto_sena ELSE 0 END), 0) AS monto_pendiente,
+                   SUM(CASE WHEN estado IN (?, ?)
+                       THEN 1 ELSE 0 END) AS cantidad_pendientes,
+                   SUM(CASE WHEN estado = ?
+                       THEN 1 ELSE 0 END) AS cantidad_sin_sena,
+                   SUM(CASE WHEN strftime('%Y-%m', creado_en) = ?
+                       THEN 1 ELSE 0 END) AS total_trabajos
+               FROM trabajos WHERE usuario_id = ?""",
+            (
+                mes,
+                mes,
+                EstadoTrabajo.SENA_ENVIADA.value, EstadoTrabajo.SENA_COBRADA.value,
+                EstadoTrabajo.SENA_ENVIADA.value, EstadoTrabajo.SENA_COBRADA.value,
+                EstadoTrabajo.PRESUPUESTADO.value,
+                mes,
+                usuario_id,
+            ),
+        )
+        fila = await cursor.fetchone()
+        return ResumenMensual(**_normalizar_conteos_resumen(dict(fila)))

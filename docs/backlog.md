@@ -64,8 +64,9 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 4 — Ver resumen (`/resumen`)
 
-- [ ] Query agregada por mes (cobrado / pendiente / sin seña)
-- [ ] Formato de salida según mockup de `CLAUDE.md`
+- [x] `handlers/resumen.py` — comando directo, sin flujo conversacional
+- [x] `database.get_resumen_mensual` — query agregada por mes (cobrado / pendiente / sin seña)
+- [x] Formato de salida según mockup de `CLAUDE.md`
 
 ## Momento 5 — Historial de clientes (`/clientes`)
 

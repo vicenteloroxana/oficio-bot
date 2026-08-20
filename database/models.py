@@ -82,3 +82,13 @@ class Recordatorio(BaseModel):
     trabajo_id: int
     enviado_en: datetime = Field(default_factory=datetime.now)
     respuesta: RespuestaRecordatorio | None = None
+
+
+class ResumenMensual(BaseModel):
+    """Resumen agregado de un usuario para un mes (Momento 4 — /resumen)."""
+    monto_cobrado: float = Field(ge=0)
+    cantidad_cobrados: int = Field(ge=0)
+    monto_pendiente: float = Field(ge=0)
+    cantidad_pendientes: int = Field(ge=0)
+    cantidad_sin_sena: int = Field(ge=0)
+    total_trabajos: int = Field(ge=0)

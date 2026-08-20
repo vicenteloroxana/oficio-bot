@@ -51,6 +51,38 @@ a vos mismo en 3 meses.
 
 ---
 
+## Los commits deben ser atómicos
+
+Un commit atómico contiene un solo cambio lógico — algo que se pueda
+describir en una oración y que tenga sentido revertir de una sola vez.
+Si para revertir un commit tendrías que rescatar a mano partes de él
+porque mezcla cosas no relacionadas, no era atómico.
+
+**Antes de elegir el tipo, separá el diff en unidades atómicas.** Una
+misma tarea suele generar varios commits, no uno solo:
+
+```
+chore: agregar dependencia nueva a requirements.txt
+feat(scope): implementar la funcionalidad que usa esa dependencia
+test(scope): cubrir la funcionalidad nueva
+docs: actualizar backlog o documentación relacionada
+```
+
+**Cuándo SÍ va todo en un commit:** cuando las partes no compilan o no
+pasan los tests por separado (ej: un handler nuevo junto con la función
+de base de datos que usa — separarlos dejaría un commit intermedio roto).
+
+**Cuándo NO va todo en un commit:** "mientras estaba" cambios sin
+relación (ej: un `fix` de paso mientras hacías un `feat` en otro
+archivo) — eso son dos commits, aunque hayan surgido en la misma sesión
+de trabajo.
+
+**Señal de que no es atómico:** si te cuesta escribir una sola
+descripción en imperativo sin usar "y" para unir dos cosas distintas,
+probablemente son dos commits.
+
+---
+
 ## Los tipos — cuándo usar cada uno
 
 ### `feat` — Nueva funcionalidad

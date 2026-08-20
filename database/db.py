@@ -9,7 +9,7 @@ from typing import AsyncIterator
 
 import aiosqlite
 
-from database.models import Trabajo, Usuario
+from database.models import EstadoTrabajo, Recordatorio, RespuestaRecordatorio, Trabajo, Usuario
 
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
 
@@ -110,3 +110,64 @@ async def guardar_pdf_path(trabajo_id: int, pdf_path: str, db_path: str = DB_PAT
             "UPDATE trabajos SET pdf_path = ? WHERE id = ?", (pdf_path, trabajo_id)
         )
         await db.commit()
+
+
+async def marcar_sena_enviada(trabajo_id: int, db_path: str = DB_PATH) -> None:
+    """Pasa el trabajo a estado sena_enviada. Arranca el conteo de REMINDER_DAYS."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE trabajos SET estado = ? WHERE id = ?",
+            (EstadoTrabajo.SENA_ENVIADA.value, trabajo_id),
+        )
+        await db.commit()
+
+
+async def get_trabajos_para_recordar(dias: int, db_path: str = DB_PATH) -> list[Trabajo]:
+    """Trabajos con seña enviada hace >= `dias` días y sin recordatorio marcado como pagado."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT * FROM trabajos
+               WHERE estado = ?
+                 AND datetime(creado_en) <= datetime('now', ?)
+                 AND id NOT IN (
+                     SELECT trabajo_id FROM recordatorios WHERE respuesta = ?
+                 )""",
+            (
+                EstadoTrabajo.SENA_ENVIADA.value,
+                f"-{dias} days",
+                RespuestaRecordatorio.MARCADO_PAGADO.value,
+            ),
+        )
+        filas = await cursor.fetchall()
+        return [Trabajo(**dict(fila)) for fila in filas]
+
+
+async def crear_recordatorio(trabajo_id: int, db_path: str = DB_PATH) -> None:
+    """Registra el envío de un recordatorio de pago."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "INSERT INTO recordatorios (trabajo_id) VALUES (?)", (trabajo_id,)
+        )
+        await db.commit()
+
+
+async def responder_ultimo_recordatorio(
+    trabajo_id: int, respuesta: RespuestaRecordatorio, db_path: str = DB_PATH
+) -> None:
+    """Guarda la respuesta del trabajador al recordatorio más reciente de un trabajo."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            """UPDATE recordatorios SET respuesta = ?
+               WHERE id = (SELECT id FROM recordatorios WHERE trabajo_id = ?
+                           ORDER BY enviado_en DESC LIMIT 1)""",
+            (respuesta.value, trabajo_id),
+        )
+        await db.commit()
+
+
+async def get_trabajo(trabajo_id: int, db_path: str = DB_PATH) -> Trabajo | None:
+    """Busca un trabajo por id. None si no existe."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute("SELECT * FROM trabajos WHERE id = ?", (trabajo_id,))
+        fila = await cursor.fetchone()
+        return Trabajo(**dict(fila)) if fila else None

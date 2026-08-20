@@ -23,6 +23,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/check_db_docs_sync.py",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "context": {

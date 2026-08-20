@@ -61,3 +61,27 @@ No hace falta enumerar exhaustivamente cada combinación matemáticamente posibl
 es si el diff cubre al menos una combinación no trivial (dos o más variables moviéndose juntas)
 por cada función de negocio nueva, y si el caso "el dato desaparece" fue considerado
 explícitamente aunque el test no lo cubra todavía.
+
+## Cuándo un hallazgo nuevo se agrega como punto nuevo acá (y cuándo no)
+
+Esta lista crece rara vez, a propósito — agregar un punto por cada bug encontrado la convierte
+en el catálogo cerrado que el encabezado de este archivo dice explícitamente que no debe ser.
+Antes de agregar un punto nuevo, aplicá esta prueba:
+
+> Si el mismo bug hubiera aparecido en un handler completamente distinto, con variables
+> completamente distintas a las de hoy, **¿la redacción que estás por escribir seguiría
+> aplicando tal cual, sin cambiar una palabra del patrón?**
+
+- **Sí** → es un patrón estructural nuevo, no una instancia. Se agrega, formulado como pregunta
+  sobre la *forma* del código (una comparación, un acceso, una decisión binaria), nunca como
+  lista de qué campos o entidades la disparan. Precedentes: el punto 5 (rangos con
+  `desde > hasta`) — aplica igual a fechas, precios u horarios, no es "cuidado con
+  `MesDesde`/`MesHasta`"; el punto 6 (recurso por id que puede no existir) — aplica a cualquier
+  callback con id, no es "cuidado con `trabajo_id`".
+- **No** → ya lo cubre un punto existente (normalmente el 1, 2 o 3, que son genéricos por
+  diseño), o es tan específico de una función puntual que documentarlo acá lo dejaría viejo en
+  cuanto esa función cambie. No se agrega. Precedente: un ternario binario que absorbe
+  silenciosamente un valor `null` o una categoría futura como si fuera el caso más común —
+  parece candidato, pero ya lo cubre `docs/review-rules-simplify/20-simplificacion.md`
+  ("condiciones siempre verdaderas... un ternario/if-else binario que en la práctica solo puede
+  tomar un valor"). Duplicarlo acá no agrega cobertura, solo mantenimiento.

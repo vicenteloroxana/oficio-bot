@@ -346,6 +346,18 @@ Bot: ✅ Logo guardado. Aparecerá en
   `requirements-dev.txt`, no en `requirements.txt` — ese archivo es
   solo lo que el bot necesita para correr en producción.
 
+### Deuda y pendientes
+- Si un cambio deja algo sujeto a una decisión o funcionalidad futura
+  (ej: una config que solo se puede validar en el entorno de deploy real,
+  un placeholder que se reemplaza cuando se implemente otro Momento, un
+  mecanismo que depende de una migración todavía no hecha como polling →
+  webhooks), anotarlo en `docs/backlog.md` → sección "Pendiente de
+  decidir", en el mismo PR que lo genera. No alcanza con mencionarlo en
+  la conversación o en el PR: si no queda en el backlog, se pierde.
+- No documentar esto en `CLAUDE.md` — ese archivo es la especificación
+  estable del proyecto (arquitectura, flujos, reglas), no el estado de
+  avance. El backlog es el lugar para "esto quedó pendiente de resolver".
+
 ### Seguridad
 - API keys y tokens NUNCA en código — siempre desde variables de entorno
 - El archivo `.env` NUNCA se sube al repo (ya está en `.gitignore`)

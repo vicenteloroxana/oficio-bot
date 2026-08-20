@@ -1,9 +1,11 @@
 """Flujo conversacional de /presupuesto: alta de un trabajo presupuestado.
 
 Ver CLAUDE.md — Momento 1. 4 pasos (cliente → descripción → monto → seña),
-guarda el Trabajo en estado `presupuestado`. Generación de PDF queda para
-un PR aparte (services/pdf_service.py todavía no existe).
+guarda el Trabajo en estado `presupuestado`, genera el PDF y lo envía.
 """
+import asyncio
+from pathlib import Path
+
 from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import (
     ContextTypes,
@@ -13,8 +15,9 @@ from telegram.ext import (
     filters,
 )
 
-from database.db import crear_trabajo, get_usuario
+from database.db import crear_trabajo, get_usuario, guardar_pdf_path
 from database.models import Trabajo
+from services.pdf_service import generar_pdf
 
 ESPERANDO_CLIENTE, ESPERANDO_DESCRIPCION, ESPERANDO_MONTO, ESPERANDO_SENA = range(4)
 
@@ -72,6 +75,31 @@ async def recibir_monto(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return ESPERANDO_SENA
 
 
+async def _guardar_y_enviar_presupuesto(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, trabajo: Trabajo
+) -> None:
+    """Persiste el Trabajo, genera su PDF y lo envía por chat."""
+    trabajo_id = await crear_trabajo(trabajo)
+    trabajo = trabajo.model_copy(update={"id": trabajo_id})
+    context.user_data.clear()
+
+    usuario = await get_usuario(update.effective_user.id)
+    # WeasyPrint es sync — se corre en un thread aparte para no bloquear el event loop.
+    pdf_path = await asyncio.to_thread(generar_pdf, usuario, trabajo)
+    await guardar_pdf_path(trabajo_id, pdf_path)
+
+    await update.message.reply_text(
+        f"✅ Presupuesto guardado.\n\n"
+        f"Cliente: {trabajo.cliente_nombre}\n"
+        f"Trabajo: {trabajo.descripcion}\n"
+        f"Total:   ${trabajo.monto_total:.0f}\n"
+        f"Seña:    ${trabajo.monto_sena:.0f}",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    pdf_bytes = await asyncio.to_thread(Path(pdf_path).read_bytes)
+    await update.message.reply_document(pdf_bytes, filename="presupuesto.pdf")
+
+
 async def recibir_sena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Valida la seña, crea el Trabajo en la BD y cierra el flujo."""
     texto = update.message.text.strip().lower()
@@ -100,17 +128,7 @@ async def recibir_sena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         monto_total=monto_total,
         monto_sena=monto_sena,
     )
-    await crear_trabajo(trabajo)
-    context.user_data.clear()
-
-    await update.message.reply_text(
-        f"✅ Presupuesto guardado.\n\n"
-        f"Cliente: {trabajo.cliente_nombre}\n"
-        f"Trabajo: {trabajo.descripcion}\n"
-        f"Total:   ${trabajo.monto_total:.0f}\n"
-        f"Seña:    ${trabajo.monto_sena:.0f}",
-        reply_markup=ReplyKeyboardRemove(),
-    )
+    await _guardar_y_enviar_presupuesto(update, context, trabajo)
     return ConversationHandler.END
 
 

@@ -81,6 +81,17 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Pendiente de decidir (no bloquea Fase 1)
 
+- [ ] Gate de CI para `/pre-review` (ADR-006, `docs/review-rules/*.md`) —
+      decidido el alcance (solo `20-edge-cases.md`, bloqueante si hay 🔴),
+      pero bloqueado por **autenticación**: correr `claude -p` en un runner
+      de GitHub Actions necesita `ANTHROPIC_API_KEY` (API de pago por uso,
+      cuenta de facturación separada de la suscripción de Claude Code) o el
+      `claude-code-action` oficial con OAuth de la suscripción (si el plan
+      lo soporta — no confirmado). La suscripción de Claude Code sola NO
+      alcanza para invocación no interactiva en CI. Retomar cuando esté
+      resuelto el tema de costo/acceso. Hasta entonces, `/pre-review` sigue
+      siendo chequeo local manual (gratis, corre en la sesión de Claude
+      Code), no bloquea Fase 1.
 - [x] Mecanismo de scheduling para Momento 2 — resuelto: `JobQueue` de
       python-telegram-bot (extra `job-queue`, corre dentro del mismo proceso
       del bot, sin job separado). Revisar si escala mal al migrar a webhooks

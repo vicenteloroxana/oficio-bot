@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from telegram.ext import Application
 
 from database.db import init_db
+from handlers.cobro import cobro_callback_handler, cobro_handler
 from handlers.presupuesto import presupuesto_handler
 from handlers.recordatorio import registrar_recordatorios
 from handlers.registro import registro_handler
@@ -38,6 +39,8 @@ def main() -> None:
     app = Application.builder().token(token).post_init(post_init).build()
     app.add_handler(registro_handler)
     app.add_handler(presupuesto_handler)
+    app.add_handler(cobro_handler)
+    app.add_handler(cobro_callback_handler)
     registrar_recordatorios(app)
 
     logger.info("Bot iniciado")

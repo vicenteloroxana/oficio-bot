@@ -57,8 +57,10 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 3 — Registrar cobro final (`/cobrar`)
 
-- [ ] `handlers/cobro.py` — listar trabajos pendientes, seleccionar, registrar forma de pago
-- [ ] Actualizar `estado` a `finalizado` y `cobrado_en`
+- [x] `handlers/cobro.py` — listar trabajos pendientes, seleccionar, registrar forma de pago
+- [x] Actualizar `estado` a `finalizado` y `cobrado_en`
+- [x] Columna `forma_pago` en `trabajos` (no existía en el schema original — agregada
+      para persistir el botón elegido, ver "Pendiente de decidir" abajo)
 
 ## Momento 4 — Ver resumen (`/resumen`)
 

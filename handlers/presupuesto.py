@@ -6,7 +6,7 @@ guarda el Trabajo en estado `presupuestado`, genera el PDF y lo envía.
 import asyncio
 from pathlib import Path
 
-from telegram import ReplyKeyboardRemove, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     ContextTypes,
     ConversationHandler,
@@ -98,6 +98,21 @@ async def _guardar_y_enviar_presupuesto(
     )
     pdf_bytes = await asyncio.to_thread(Path(pdf_path).read_bytes)
     await update.message.reply_document(pdf_bytes, filename="presupuesto.pdf")
+
+    if trabajo.monto_sena > 0:
+        # El recordatorio automático (Momento 2) solo arranca a contar una vez
+        # confirmado que el presupuesto ya llegó al cliente.
+        await update.message.reply_text(
+            f"¿Ya le mandaste este presupuesto a {trabajo.cliente_nombre}?",
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton("Sí", callback_data=f"sena_enviada:{trabajo.id}"),
+                        InlineKeyboardButton("Todavía no", callback_data="sena_enviada:no"),
+                    ]
+                ]
+            ),
+        )
 
 
 async def recibir_sena(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

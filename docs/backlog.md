@@ -44,10 +44,16 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 2 — Recordatorio automático (sin comando)
 
-- [ ] `handlers/recordatorio.py` — lógica de disparo según `REMINDER_DAYS`
-- [ ] Mecanismo de scheduling (job periódico — definir cómo se dispara sin webhook)
-- [ ] Botones `[Marcar como pagado]` / `[Ignorar]` (fase 1 — sin `[Reenviar link]`)
-- [ ] Registrar cada envío en `recordatorios`
+- [x] `handlers/recordatorio.py` — lógica de disparo según `REMINDER_DAYS`
+- [x] Mecanismo de scheduling (`JobQueue` de python-telegram-bot, `run_repeating`
+      cada 1h — ver "Pendiente de decidir" abajo)
+- [x] Botones `[Marcar como pagado]` / `[Ignorar]` (fase 1 — sin `[Reenviar link]`)
+- [x] Registrar cada envío en `recordatorios`
+- [x] Paso nuevo en `/presupuesto` (Momento 1): con seña > 0, tras mandar el PDF
+      pregunta "¿Ya le mandaste este presupuesto a {cliente}?" — recién ahí el
+      trabajo pasa a `sena_enviada` y arranca a contar `REMINDER_DAYS`. Sin esta
+      confirmación no hay disparo (decisión explícita: no basta con crear el
+      trabajo, fase 1 no tiene Mercado Pago que confirme el envío solo).
 
 ## Momento 3 — Registrar cobro final (`/cobrar`)
 
@@ -72,8 +78,14 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Pendiente de decidir (no bloquea Fase 1)
 
-- [ ] Mecanismo de scheduling para Momento 2 (no hay definición todavía —
-      afecta si corre dentro del mismo proceso o necesita un job separado)
+- [x] Mecanismo de scheduling para Momento 2 — resuelto: `JobQueue` de
+      python-telegram-bot (extra `job-queue`, corre dentro del mismo proceso
+      del bot, sin job separado). Revisar si escala mal al migrar a webhooks
+      en Railway (ver ítem siguiente) o si Railway reinicia el proceso seguido
+      — `run_repeating` no persiste su estado entre reinicios, así que un
+      reinicio no duplica recordatorios (se re-arma desde `recordatorios` en
+      BD) pero sí puede demorar el próximo chequeo hasta `first=10s` después
+      del arranque.
 - [ ] Migración de polling a webhooks al deployar en Railway (ver ADR-001)
       — transversal, no de un Momento puntual; también condiciona
       Mercado Pago en Fase 2 (ver abajo)

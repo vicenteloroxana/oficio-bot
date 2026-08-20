@@ -92,6 +92,34 @@ async def crear_usuario(usuario: Usuario, db_path: str = DB_PATH) -> None:
         await db.commit()
 
 
+async def actualizar_usuario(
+    telegram_id: int, *, nombre: str | None = None, oficio: str | None = None, db_path: str = DB_PATH
+) -> None:
+    """Actualiza nombre y/o oficio de un usuario ya registrado (Momento 6)."""
+    campos, valores = [], []
+    if nombre is not None:
+        campos.append("nombre = ?")
+        valores.append(nombre)
+    if oficio is not None:
+        campos.append("oficio = ?")
+        valores.append(oficio)
+    if not campos:
+        return
+    valores.append(telegram_id)
+    async with get_connection(db_path) as db:
+        await db.execute(f"UPDATE usuarios SET {', '.join(campos)} WHERE telegram_id = ?", valores)
+        await db.commit()
+
+
+async def guardar_logo_path(telegram_id: int, logo_path: str, db_path: str = DB_PATH) -> None:
+    """Registra la ruta local del logo subido por el usuario (Momento 6)."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE usuarios SET logo_path = ? WHERE telegram_id = ?", (logo_path, telegram_id)
+        )
+        await db.commit()
+
+
 async def crear_trabajo(trabajo: Trabajo, db_path: str = DB_PATH) -> int:
     """Inserta un trabajo presupuestado y devuelve su id autoincremental."""
     async with get_connection(db_path) as db:

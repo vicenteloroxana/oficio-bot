@@ -35,7 +35,17 @@ validaciones en `database/models.py`), respondé estas preguntas:
 4. **Si la función tiene una rama condicional nueva (`if`/`match`/filtro SQL nuevo), ¿hay al
    menos un test que fuerce esa rama con una combinación que no sea la más obvia?**
 
-5. **Recurso referenciado por id que puede no existir cuando el código lo busca.** Un callback
+5. **¿El diff compara un valor contra un rango (`desde <= x <= hasta`, `min`/`max`, ventana de
+   fechas u horarios) asumiendo que el límite inferior siempre es menor que el superior?** Esa
+   suposición vive implícita en el operador, no verificada en ningún lado — si el dominio
+   permite cargar el rango "al revés" (una ventana que cruza fin de año, un horario que cruza
+   medianoche, límites de precio invertidos por error de carga), la comparación da falso
+   siempre y el filtro no matchea nunca, sin error visible. No importa de qué campo es el rango
+   — el patrón es el mismo esté en fechas, montos, horarios o cualquier par de límites nuevo
+   que aparezca. Preguntá explícitamente "¿puede `desde > hasta` en este dominio?", no solo
+   "¿el rango es de fechas?".
+
+6. **Recurso referenciado por id que puede no existir cuando el código lo busca.** Un callback
    de botón inline (`callback_data=f"...:{trabajo_id}"`) o un handler que recibe un id llevan
    ese id como texto/número desconectado del objeto real — el trabajo pudo cancelarse,
    finalizarse o (en teoría) no existir entre que el botón se mostró y que se tocó. Si el diff

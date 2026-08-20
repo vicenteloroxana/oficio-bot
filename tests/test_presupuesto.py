@@ -84,7 +84,8 @@ async def test_flujo_completo_guarda_trabajo(db_path: str, tmp_path, monkeypatch
     assert await recibir_cliente(_update_con_texto("Juan López"), context) == ESPERANDO_DESCRIPCION
     assert await recibir_descripcion(_update_con_texto("Pintura de living"), context) == ESPERANDO_MONTO
     assert await recibir_monto(_update_con_texto("180000"), context) == ESPERANDO_SENA
-    resultado = await recibir_sena(_update_con_texto("90000"), context)
+    update_final = _update_con_texto("90000")
+    resultado = await recibir_sena(update_final, context)
 
     assert resultado == ConversationHandler.END
     assert context.user_data == {}
@@ -95,6 +96,11 @@ async def test_flujo_completo_guarda_trabajo(db_path: str, tmp_path, monkeypatch
     assert fila["monto_total"] == 180000
     assert fila["monto_sena"] == 90000
     assert fila["pdf_path"] == str(pdf_falso)
+
+    # Con seña > 0 el bot pregunta si ya se le mandó el presupuesto al cliente
+    # (Momento 2 — arranca a contar REMINDER_DAYS solo tras confirmar que sí).
+    ultima_llamada = update_final.message.reply_text.call_args_list[-1]
+    assert "¿Ya le mandaste" in ultima_llamada.args[0]
 
 
 @pytest.mark.asyncio

@@ -70,14 +70,18 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 5 — Historial de clientes (`/clientes`)
 
+Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
+
 - [ ] `handlers/clientes.py` — listar clientes con totales
 - [ ] Detalle por cliente al seleccionar uno
 
 ## Momento 6 — Configurar perfil (`/perfil`)
 
-- [ ] Ver perfil actual (nombre, oficio, logo)
-- [ ] Editar nombre / oficio
-- [ ] Subir logo (validar `MAX_LOGO_SIZE_MB`, guardar local — nunca al repo)
+- [x] Ver perfil actual (nombre, oficio, logo) — `handlers/perfil.py`
+- [x] Editar nombre / oficio — `database.actualizar_usuario`
+- [x] Subir logo (validar `MAX_LOGO_SIZE_MB`, guardar en `assets/logos/`,
+      nunca al repo — ya estaba en `.gitignore`) — `database.guardar_logo_path`
+- [x] Tests (`tests/test_perfil.py`)
 
 ## Pendiente de decidir (no bloquea Fase 1)
 

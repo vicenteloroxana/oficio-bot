@@ -164,17 +164,23 @@ Bot: ✅ Listo. Generando presupuesto...
      Seña:    $90.000
      Validez: 7 días
 
-     ¿Querés que le mande el link de pago de la seña?
+     ¿Ya le mandaste este presupuesto a Juan López?
 
-Trabajador: Sí
+     [Sí]  [Todavía no]
 
-Bot: 🔗 Link de pago Mercado Pago:
-     https://mpago.la/xxxxx
+Trabajador: [Sí]
 
-     Mandáselo a Juan y cuando pague te aviso automáticamente.
+Bot: ✅ Listo, te aviso si no llega el pago a tiempo.
 ```
-> Nota: el link de Mercado Pago es fase 2. En fase 1 el bot confirma
-> el presupuesto y el PDF, pero no genera el link de pago.
+> Nota: en fase 1, sin Mercado Pago, "mandar el presupuesto" es un paso
+> manual del trabajador (por WhatsApp, en persona, etc.) — el bot no lo
+> sabe hasta que el trabajador confirma con el botón. Esa confirmación
+> es lo que pasa el trabajo a `sena_enviada` y arranca el conteo de
+> `REMINDER_DAYS` para el recordatorio automático (ver Momento 2 y
+> ADR-004). Este paso solo aparece si se pidió seña (`monto_sena > 0`);
+> si no se pidió, el flujo termina en el PDF sin preguntar nada más.
+> El link de pago de Mercado Pago (mostrado en versiones previas de este
+> mockup) es fase 2 — no implementado todavía.
 
 ---
 
@@ -370,6 +376,8 @@ Bot: ✅ Logo guardado. Aparecerá en
 - Cualquier archivo de configuración de Railway
 
 ### ADRs (`docs/adr/`)
+- Criterio para decidir si un cambio es de arquitectura (amerita ADR) o de
+  implementación (no lo amerita): ver `docs/adr/005-criterio-para-nuevos-adr.md`.
 - Un ADR nunca se edita para cambiar la decisión que registra — es historial.
   Si una decisión cambia: ADR nuevo (numeración siguiente) + el viejo pasa a
   estado `Reemplazado por ADR-00X`.

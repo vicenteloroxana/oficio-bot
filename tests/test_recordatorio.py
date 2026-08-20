@@ -119,6 +119,7 @@ async def test_confirmar_sena_enviada_si_pasa_estado(db_path: str, monkeypatch) 
     )
     trabajo_id = await crear_trabajo(trabajo, db_path)
     monkeypatch.setattr(recordatorio_mod, "marcar_sena_enviada", partial(marcar_sena_enviada, db_path=db_path))
+    monkeypatch.setattr(recordatorio_mod, "get_trabajo", partial(get_trabajo, db_path=db_path))
 
     update = _callback_update(f"sena_enviada:{trabajo_id}")
     await confirmar_sena_enviada(update, MagicMock())
@@ -136,6 +137,17 @@ async def test_confirmar_sena_enviada_todavia_no_no_cambia_estado(db_path: str, 
     await confirmar_sena_enviada(update, MagicMock())
 
     update.callback_query.edit_message_text.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_confirmar_sena_enviada_trabajo_inexistente_no_confirma_exito(db_path: str, monkeypatch) -> None:
+    """Un callback viejo sobre un trabajo que ya no existe no dice 'listo' silenciosamente."""
+    monkeypatch.setattr(recordatorio_mod, "get_trabajo", partial(get_trabajo, db_path=db_path))
+
+    update = _callback_update("sena_enviada:9999")
+    await confirmar_sena_enviada(update, MagicMock())
+
+    update.callback_query.edit_message_text.assert_called_once_with("Esta selección ya expiró.")
 
 
 @pytest.mark.asyncio
@@ -157,6 +169,20 @@ async def test_responder_recordatorio_marcado_pagado(db_path: str, monkeypatch) 
         )
         fila = await cursor.fetchone()
     assert fila["respuesta"] == "marcado_pagado"
+
+
+@pytest.mark.asyncio
+async def test_responder_recordatorio_marcado_pagado_trabajo_inexistente(db_path: str, monkeypatch) -> None:
+    """Un callback viejo sobre un trabajo que ya no existe no revienta con AttributeError."""
+    monkeypatch.setattr(
+        recordatorio_mod, "responder_ultimo_recordatorio", partial(responder_ultimo_recordatorio, db_path=db_path)
+    )
+    monkeypatch.setattr(recordatorio_mod, "get_trabajo", partial(get_trabajo, db_path=db_path))
+
+    update = _callback_update("recordatorio_pagado:9999")
+    await responder_recordatorio(update, MagicMock())
+
+    update.callback_query.edit_message_text.assert_called_once_with("✅ Marcado como pagado.")
 
 
 @pytest.mark.asyncio

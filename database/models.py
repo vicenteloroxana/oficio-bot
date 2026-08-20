@@ -48,6 +48,7 @@ class Trabajo(BaseModel):
     monto_sena: float = Field(ge=0)
     estado: EstadoTrabajo = EstadoTrabajo.PRESUPUESTADO
     pdf_path: str | None = None
+    forma_pago: str | None = None
     creado_en: datetime = Field(default_factory=datetime.now)
     cobrado_en: datetime | None = None
 
@@ -59,6 +60,13 @@ class Trabajo(BaseModel):
         if monto_total is not None and v > monto_total:
             raise ValueError("monto_sena no puede superar monto_total")
         return v
+
+
+class FormaPago(str, Enum):
+    """Formas de cobro del monto final de un trabajo."""
+    EFECTIVO = "efectivo"
+    TRANSFERENCIA = "transferencia"
+    MP = "mp"
 
 
 class RespuestaRecordatorio(str, Enum):

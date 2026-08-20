@@ -9,7 +9,7 @@ from typing import AsyncIterator
 
 import aiosqlite
 
-from database.models import EstadoTrabajo, Recordatorio, RespuestaRecordatorio, Trabajo, Usuario
+from database.models import EstadoTrabajo, FormaPago, Recordatorio, RespuestaRecordatorio, Trabajo, Usuario
 
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
 
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS trabajos (
     monto_sena REAL NOT NULL DEFAULT 0,
     estado TEXT NOT NULL DEFAULT 'presupuestado',
     pdf_path TEXT,
+    forma_pago TEXT,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     cobrado_en DATETIME
 );
@@ -171,3 +172,26 @@ async def get_trabajo(trabajo_id: int, db_path: str = DB_PATH) -> Trabajo | None
         cursor = await db.execute("SELECT * FROM trabajos WHERE id = ?", (trabajo_id,))
         fila = await cursor.fetchone()
         return Trabajo(**dict(fila)) if fila else None
+
+
+async def get_trabajos_pendientes(usuario_id: int, db_path: str = DB_PATH) -> list[Trabajo]:
+    """Trabajos de un usuario que todavía no fueron cobrados del todo (Momento 3)."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT * FROM trabajos WHERE usuario_id = ?
+               AND estado NOT IN (?, ?) ORDER BY creado_en""",
+            (usuario_id, EstadoTrabajo.FINALIZADO.value, EstadoTrabajo.CANCELADO.value),
+        )
+        filas = await cursor.fetchall()
+        return [Trabajo(**dict(fila)) for fila in filas]
+
+
+async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = DB_PATH) -> None:
+    """Cierra un trabajo: pasa a finalizado, guarda forma de pago y fecha de cobro."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            """UPDATE trabajos SET estado = ?, forma_pago = ?, cobrado_en = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            (EstadoTrabajo.FINALIZADO.value, forma_pago.value, trabajo_id),
+        )
+        await db.commit()

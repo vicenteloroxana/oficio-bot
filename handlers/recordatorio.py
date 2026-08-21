@@ -62,7 +62,9 @@ async def confirmar_sena_enviada(update: Update, context: ContextTypes.DEFAULT_T
     _, trabajo_id = query.data.split(":")
 
     if trabajo_id == "no":
-        await query.edit_message_text("Dale, avisame cuando se lo mandes.")
+        await query.edit_message_text(
+            "Dale, avisame cuando se lo mandes con /confirmar_envio."
+        )
         return
 
     if await get_trabajo(int(trabajo_id)) is None:

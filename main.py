@@ -12,6 +12,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from database.db import init_db
 from handlers.ayuda import ayuda, comando_no_reconocido, mensaje_no_reconocido
 from handlers.cobro import cobro_callback_handler, cobro_handler
+from handlers.confirmar_envio import confirmar_envio_handler
 from handlers.perfil import perfil_handler
 from handlers.presupuesto import presupuesto_handler
 from handlers.recordatorio import registrar_recordatorios
@@ -45,6 +46,7 @@ def main() -> None:
     app.add_handler(presupuesto_handler)
     app.add_handler(cobro_handler)
     app.add_handler(cobro_callback_handler)
+    app.add_handler(confirmar_envio_handler)
     app.add_handler(reintentar_pdf_handler)
     app.add_handler(perfil_handler)
     app.add_handler(CommandHandler("resumen", resumen))

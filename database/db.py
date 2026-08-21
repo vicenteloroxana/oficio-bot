@@ -256,6 +256,19 @@ async def get_trabajos_pendientes(usuario_id: int, db_path: str = DB_PATH) -> li
         return [Trabajo(**dict(fila)) for fila in filas]
 
 
+async def get_trabajos_sin_confirmar_envio(usuario_id: int, db_path: str = DB_PATH) -> list[Trabajo]:
+    """Trabajos con seña pedida que siguen en 'presupuestado' (el trabajador
+    respondió 'Todavía no' o nunca confirmó el envío del presupuesto)."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT * FROM trabajos WHERE usuario_id = ?
+               AND estado = ? AND monto_sena > 0 ORDER BY creado_en""",
+            (usuario_id, EstadoTrabajo.PRESUPUESTADO.value),
+        )
+        filas = await cursor.fetchall()
+        return [Trabajo(**dict(fila)) for fila in filas]
+
+
 async def get_trabajos_con_pdf_error(usuario_id: int, db_path: str = DB_PATH) -> list[Trabajo]:
     """Trabajos de un usuario cuyo PDF falló tras agotar los reintentos (ver presupuesto.py)."""
     async with get_connection(db_path) as db:

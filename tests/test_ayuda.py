@@ -18,7 +18,10 @@ async def test_ayuda_lista_los_comandos() -> None:
     await ayuda(update, MagicMock())
 
     texto = update.message.reply_text.call_args.args[0]
-    for comando in ("/presupuesto", "/cobrar", "/resumen", "/perfil", "/cancel", "/help"):
+    for comando in (
+        "/presupuesto", "/cobrar", "/resumen", "/perfil",
+        "/reintentar_pdf", "/cancel", "/help",
+    ):
         assert comando in texto
 
 

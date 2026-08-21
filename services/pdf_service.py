@@ -12,7 +12,6 @@ from string import Template
 from database.models import Trabajo, Usuario
 
 TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "presupuesto.html"
-LOGO_DEFAULT_PATH = Path(__file__).resolve().parent.parent / "assets" / "logo_default.png"
 PDF_DIR = Path(os.getenv("PDF_DIR", "pdfs"))
 
 
@@ -21,15 +20,22 @@ def _formatear_monto(monto: float) -> str:
     return f"${monto:,.0f}".replace(",", ".")
 
 
+def _bloque_logo(usuario: Usuario) -> str:
+    """Bloque <img> del logo, vacío si el usuario no configuró uno propio."""
+    if not usuario.logo_path:
+        return ""
+    logo_src = Path(usuario.logo_path).resolve().as_uri()
+    return f'<img src="{logo_src}" alt="logo">'
+
+
 def _renderizar_html(usuario: Usuario, trabajo: Trabajo) -> str:
     """Arma el HTML del presupuesto, escapando los campos de texto libre
     (cliente, descripción) para que no rompan el template."""
-    logo_path = Path(trabajo_logo) if (trabajo_logo := usuario.logo_path) else LOGO_DEFAULT_PATH
     plantilla = Template(TEMPLATE_PATH.read_text(encoding="utf-8"))
     return plantilla.substitute(
         nombre_trabajador=html.escape(usuario.nombre),
         oficio_trabajador=html.escape(usuario.oficio),
-        logo_src=logo_path.resolve().as_uri(),
+        logo_bloque=_bloque_logo(usuario),
         cliente_nombre=html.escape(trabajo.cliente_nombre),
         descripcion=html.escape(trabajo.descripcion),
         fecha=trabajo.creado_en.strftime("%d/%m/%Y"),

@@ -1,8 +1,9 @@
 """Tests de services/pdf_service.py: armado del HTML y formato de montos."""
 from datetime import datetime
+from pathlib import Path
 
 from database.models import Trabajo, Usuario
-from services.pdf_service import LOGO_DEFAULT_PATH, _formatear_monto, _renderizar_html
+from services.pdf_service import _formatear_monto, _renderizar_html
 
 
 def _usuario(logo_path: str | None = None) -> Usuario:
@@ -43,7 +44,14 @@ def test_renderizar_html_escapa_texto_libre_del_cliente() -> None:
     assert "&lt;script&gt;" in contenido
 
 
-def test_renderizar_html_usa_logo_default_si_usuario_no_tiene() -> None:
+def test_renderizar_html_sin_logo_no_incluye_img() -> None:
+    """Sin logo_path configurado, no se renderiza ningún <img> — no hay placeholder."""
     contenido = _renderizar_html(_usuario(logo_path=None), _trabajo())
 
-    assert LOGO_DEFAULT_PATH.resolve().as_uri() in contenido
+    assert "<img" not in contenido
+
+
+def test_renderizar_html_con_logo_incluye_su_ruta() -> None:
+    contenido = _renderizar_html(_usuario(logo_path="assets/logos/1.png"), _trabajo())
+
+    assert Path("assets/logos/1.png").resolve().as_uri() in contenido

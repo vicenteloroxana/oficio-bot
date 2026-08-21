@@ -101,6 +101,12 @@ oficio-bot/
 | `/clientes` | Historial de clientes y trabajos por cliente |
 | `/perfil` | Ver o editar datos del trabajador (nombre, logo) |
 | `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro) |
+| `/help` | Lista los comandos disponibles |
+
+> Cualquier comando no reconocido, o texto libre fuera de un flujo
+> conversacional activo, cae en un fallback (`handlers/ayuda.py`) que
+> avisa al usuario y lo redirige a `/help` — evita el silencio total que
+> daba `python-telegram-bot` cuando ningún handler matcheaba el update.
 
 ## Flujos conversacionales — los 4 momentos del bot
 

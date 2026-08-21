@@ -95,6 +95,20 @@ async def test_resumen_cuenta_sin_sena_por_estado_actual_sin_importar_el_mes(db_
 
 
 @pytest.mark.asyncio
+async def test_resumen_distingue_sin_sena_de_presupuestado_sin_enviar(db_path: str) -> None:
+    """Caso real: un presupuestado CON seña pedida (el trabajador respondió
+    'Todavía no') no debe contar como 'sin seña' — son categorías distintas.
+    Antes 'sin seña' medía solo estado=presupuestado, sin mirar el monto."""
+    con_sena_id = await crear_trabajo(_trabajo(monto_total=10000, monto_sena=800), db_path)
+    sin_sena_id = await crear_trabajo(_trabajo(monto_total=200, monto_sena=0), db_path)
+
+    datos = await get_resumen_mensual(1, MES, db_path)
+
+    assert datos.cantidad_sin_sena == 1  # solo sin_sena_id
+    assert datos.cantidad_presupuestado_sin_enviar == 1  # solo con_sena_id
+
+
+@pytest.mark.asyncio
 async def test_resumen_trabajo_presupuestado_en_un_mes_y_avanzado_en_otro_no_desaparece(db_path: str) -> None:
     """Caso que motivó el cambio: creado_en julio, seña enviada en agosto — sigue
 
@@ -137,7 +151,7 @@ def test_texto_resumen_sigue_formato_del_mockup() -> None:
     datos = ResumenMensual(
         monto_cobrado=360000, cantidad_cobrados=4,
         monto_pendiente=180000, cantidad_pendientes=2,
-        cantidad_sin_sena=1, total_trabajos=6,
+        cantidad_sin_sena=1, cantidad_presupuestado_sin_enviar=1, total_trabajos=6,
     )
     texto = _texto_resumen(datos, datetime(2026, 8, 20))
 
@@ -145,6 +159,7 @@ def test_texto_resumen_sigue_formato_del_mockup() -> None:
     assert "Cobrado:    $360000 (4 trabajos)" in texto
     assert "Pendiente:  $180000 (2 trabajos)" in texto
     assert "Sin seña:   1 trabajo" in texto
+    assert "Presupuestado sin enviar: 1 trabajo" in texto
     assert "Trabajos este mes: 6" in texto
 
 

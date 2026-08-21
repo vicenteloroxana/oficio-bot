@@ -92,4 +92,5 @@ class ResumenMensual(BaseModel):
     monto_pendiente: float = Field(ge=0)
     cantidad_pendientes: int = Field(ge=0)
     cantidad_sin_sena: int = Field(ge=0)
+    cantidad_presupuestado_sin_enviar: int = Field(ge=0)
     total_trabajos: int = Field(ge=0)

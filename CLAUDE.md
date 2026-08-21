@@ -262,9 +262,16 @@ Bot: 📊 Tu resumen — Agosto 2026
      ✅ Cobrado:    $360.000 (4 trabajos)
      ⏳ Pendiente:  $180.000 (2 trabajos)
      ❌ Sin seña:   1 trabajo (López)
+     📤 Presupuestado sin enviar: 1 trabajo
 
      Trabajos este mes: 6
 ```
+> "Sin seña" (`monto_sena = 0`) y "Presupuestado sin enviar" (`estado =
+> presupuestado` con seña pedida — el trabajador respondió "Todavía no"
+> al momento de generar el presupuesto, ver Momento 1 y `/confirmar_envio`)
+> son categorías mutuamente excluyentes, ambas dentro de `estado =
+> presupuestado`. No se solapan con "Pendiente" (`sena_enviada` o
+> `sena_cobrada`).
 
 ---
 

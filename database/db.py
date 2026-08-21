@@ -300,7 +300,10 @@ async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = 
         await db.commit()
 
 
-_CAMPOS_ENTEROS_RESUMEN = ("cantidad_cobrados", "cantidad_pendientes", "cantidad_sin_sena", "total_trabajos")
+_CAMPOS_ENTEROS_RESUMEN = (
+    "cantidad_cobrados", "cantidad_pendientes", "cantidad_sin_sena",
+    "cantidad_presupuestado_sin_enviar", "total_trabajos",
+)
 
 
 def _normalizar_conteos_resumen(fila: dict) -> dict:
@@ -312,9 +315,14 @@ async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH)
     """Resumen agregado del usuario para `mes` (formato 'YYYY-MM'), Momento 4.
 
     Cobrado: trabajos con cobrado_en en el mes (único filtrado por fecha).
-    Pendiente y sin seña son deuda viva por estado actual, SIN filtro de
-    fecha — un trabajo presupuestado en julio con seña enviada en agosto no
-    debe "desaparecer" de ambos meses por quedar filtrado por creado_en.
+    Pendiente, sin seña y presupuestado_sin_enviar son deuda/estado viva
+    por estado actual, SIN filtro de fecha — un trabajo presupuestado en
+    julio con seña enviada en agosto no debe "desaparecer" de ambos meses
+    por quedar filtrado por creado_en.
+    Sin seña (monto_sena = 0) y presupuestado_sin_enviar (estado
+    presupuestado CON seña pedida) son mutuamente excluyentes — antes
+    "sin seña" contaba todo estado=presupuestado sin mirar el monto,
+    mezclando ambos casos bajo un nombre que no reflejaba lo que medía.
     Solo total_trabajos se filtra por creado_en del mes (trabajos generados).
     """
     async with get_connection(db_path) as db:
@@ -328,8 +336,10 @@ async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH)
                        THEN monto_total - monto_sena ELSE 0 END), 0) AS monto_pendiente,
                    SUM(CASE WHEN estado IN (?, ?)
                        THEN 1 ELSE 0 END) AS cantidad_pendientes,
-                   SUM(CASE WHEN estado = ?
+                   SUM(CASE WHEN monto_sena = 0
                        THEN 1 ELSE 0 END) AS cantidad_sin_sena,
+                   SUM(CASE WHEN estado = ? AND monto_sena > 0
+                       THEN 1 ELSE 0 END) AS cantidad_presupuestado_sin_enviar,
                    SUM(CASE WHEN strftime('%Y-%m', creado_en) = ?
                        THEN 1 ELSE 0 END) AS total_trabajos
                FROM trabajos WHERE usuario_id = ?""",

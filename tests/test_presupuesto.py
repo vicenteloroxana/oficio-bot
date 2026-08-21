@@ -5,7 +5,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from telegram.ext import ConversationHandler
 
-from database.db import crear_trabajo, crear_usuario, get_connection, get_usuario, guardar_pdf_path
+from database.db import (
+    crear_trabajo,
+    crear_usuario,
+    get_connection,
+    get_usuario,
+    guardar_pdf_path,
+    marcar_pdf_error,
+)
 from database.models import Trabajo, Usuario
 import handlers.presupuesto as presupuesto_mod
 from handlers.presupuesto import (
@@ -101,6 +108,86 @@ async def test_flujo_completo_guarda_trabajo(db_path: str, tmp_path, monkeypatch
     # (Momento 2 — arranca a contar REMINDER_DAYS solo tras confirmar que sí).
     ultima_llamada = update_final.message.reply_text.call_args_list[-1]
     assert "¿Ya le mandaste" in ultima_llamada.args[0]
+
+
+@pytest.mark.asyncio
+async def test_fallo_al_generar_pdf_no_pierde_el_trabajo(db_path: str, monkeypatch) -> None:
+    """Si generar_pdf falla siempre, se agotan los 3 intentos, se marca pdf_error
+    y el Trabajo ya guardado no se pierde."""
+    monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "marcar_pdf_error", partial(marcar_pdf_error, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod.asyncio, "sleep", AsyncMock())
+
+    intentos = []
+
+    def _pdf_roto(usuario, trabajo):
+        intentos.append(1)
+        raise OSError("no se pudo cargar la librería nativa")
+
+    monkeypatch.setattr(presupuesto_mod, "generar_pdf", _pdf_roto)
+    await crear_usuario(Usuario(telegram_id=3, nombre="Bea", oficio="plomera"), db_path)
+
+    context = _context()
+    context.user_data = {"cliente_nombre": "Pedro", "descripcion": "Cañería", "monto_total": 30000.0}
+    update = _update_con_texto("no")
+    update.effective_user.id = 3
+
+    resultado = await recibir_sena(update, context)
+
+    assert resultado == ConversationHandler.END
+    assert len(intentos) == presupuesto_mod.MAX_INTENTOS_PDF
+    update.message.reply_document.assert_not_called()
+    mensajes = [c.args[0] for c in update.message.reply_text.call_args_list]
+    assert any("quedó guardado" in m for m in mensajes)
+
+    async with get_connection(db_path) as db:
+        cursor = await db.execute("SELECT * FROM trabajos WHERE cliente_nombre = 'Pedro'")
+        fila = await cursor.fetchone()
+    assert fila is not None
+    assert fila["pdf_path"] is None
+    assert fila["pdf_error"] == 1
+
+
+@pytest.mark.asyncio
+async def test_pdf_ok_al_segundo_intento_no_marca_error(db_path: str, tmp_path, monkeypatch) -> None:
+    """Si generar_pdf falla una vez y después funciona, se adjunta el PDF y no se marca error."""
+    pdf_falso = tmp_path / "presupuesto.pdf"
+    pdf_falso.write_bytes(b"%PDF-1.4 fake")
+
+    monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod.asyncio, "sleep", AsyncMock())
+
+    intentos = []
+
+    def _pdf_falla_una_vez(usuario, trabajo):
+        intentos.append(1)
+        if len(intentos) == 1:
+            raise OSError("falla transitoria")
+        return str(pdf_falso)
+
+    monkeypatch.setattr(presupuesto_mod, "generar_pdf", _pdf_falla_una_vez)
+    await crear_usuario(Usuario(telegram_id=4, nombre="Ale", oficio="pintor"), db_path)
+
+    context = _context()
+    context.user_data = {"cliente_nombre": "Rita", "descripcion": "Pintura", "monto_total": 40000.0}
+    update = _update_con_texto("no")
+    update.effective_user.id = 4
+
+    resultado = await recibir_sena(update, context)
+
+    assert resultado == ConversationHandler.END
+    assert len(intentos) == 2
+    update.message.reply_document.assert_called_once()
+
+    async with get_connection(db_path) as db:
+        cursor = await db.execute("SELECT * FROM trabajos WHERE cliente_nombre = 'Rita'")
+        fila = await cursor.fetchone()
+    assert fila["pdf_path"] == str(pdf_falso)
+    assert fila["pdf_error"] == 0
 
 
 @pytest.mark.asyncio

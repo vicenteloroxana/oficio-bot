@@ -48,6 +48,7 @@ class Trabajo(BaseModel):
     monto_sena: float = Field(ge=0)
     estado: EstadoTrabajo = EstadoTrabajo.PRESUPUESTADO
     pdf_path: str | None = None
+    pdf_error: bool = Field(default=False)
     forma_pago: str | None = None
     creado_en: datetime = Field(default_factory=datetime.now)
     cobrado_en: datetime | None = None

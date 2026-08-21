@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS trabajos (
     monto_sena REAL NOT NULL DEFAULT 0,
     estado TEXT NOT NULL DEFAULT 'presupuestado',
     pdf_path TEXT,
+    pdf_error INTEGER NOT NULL DEFAULT 0,
     forma_pago TEXT,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     cobrado_en DATETIME
@@ -145,6 +146,15 @@ async def guardar_pdf_path(trabajo_id: int, pdf_path: str, db_path: str = DB_PAT
     async with get_connection(db_path) as db:
         await db.execute(
             "UPDATE trabajos SET pdf_path = ? WHERE id = ?", (pdf_path, trabajo_id)
+        )
+        await db.commit()
+
+
+async def marcar_pdf_error(trabajo_id: int, db_path: str = DB_PATH) -> None:
+    """Marca que se agotaron los reintentos de generar_pdf para este trabajo."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE trabajos SET pdf_error = 1 WHERE id = ?", (trabajo_id,)
         )
         await db.commit()
 

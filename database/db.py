@@ -232,6 +232,26 @@ async def get_trabajos_pendientes(usuario_id: int, db_path: str = DB_PATH) -> li
         return [Trabajo(**dict(fila)) for fila in filas]
 
 
+async def get_trabajos_con_pdf_error(usuario_id: int, db_path: str = DB_PATH) -> list[Trabajo]:
+    """Trabajos de un usuario cuyo PDF falló tras agotar los reintentos (ver presupuesto.py)."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            "SELECT * FROM trabajos WHERE usuario_id = ? AND pdf_error = 1 ORDER BY creado_en",
+            (usuario_id,),
+        )
+        filas = await cursor.fetchall()
+        return [Trabajo(**dict(fila)) for fila in filas]
+
+
+async def limpiar_pdf_error(trabajo_id: int, db_path: str = DB_PATH) -> None:
+    """Saca la marca de error tras regenerar el PDF con éxito."""
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE trabajos SET pdf_error = 0 WHERE id = ?", (trabajo_id,)
+        )
+        await db.commit()
+
+
 async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = DB_PATH) -> None:
     """Cierra un trabajo: pasa a finalizado, guarda forma de pago y fecha de cobro."""
     async with get_connection(db_path) as db:

@@ -16,6 +16,7 @@ from handlers.perfil import perfil_handler
 from handlers.presupuesto import presupuesto_handler
 from handlers.recordatorio import registrar_recordatorios
 from handlers.registro import registro_handler
+from handlers.reintentar_pdf import reintentar_pdf_handler
 from handlers.resumen import resumen
 
 load_dotenv()
@@ -44,6 +45,7 @@ def main() -> None:
     app.add_handler(presupuesto_handler)
     app.add_handler(cobro_handler)
     app.add_handler(cobro_callback_handler)
+    app.add_handler(reintentar_pdf_handler)
     app.add_handler(perfil_handler)
     app.add_handler(CommandHandler("resumen", resumen))
     app.add_handler(CommandHandler("help", ayuda))

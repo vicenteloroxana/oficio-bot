@@ -130,11 +130,13 @@ Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
       entre intentos. El `Trabajo` ya está guardado antes del PDF, así que
       nunca se pierde. Si se agotan los intentos, se marca `pdf_error = 1`
       en el trabajo (columna nueva, ver CLAUDE.md) y se avisa al usuario.
-- [ ] Regeneración manual del PDF para un trabajo con `pdf_error = 1`: hoy
-      no hay comando para reintentar solo el PDF de un trabajo ya creado —
-      depende de que exista `/pendientes` (Momento no implementado aún,
-      solo mencionado en `CLAUDE.md`) o un comando dedicado para listar
-      trabajos con `pdf_error = 1` y regenerar.
+- [x] Regeneración manual del PDF para un trabajo con `pdf_error = 1`:
+      resuelto con `/reintentar_pdf` (`handlers/reintentar_pdf.py`) — lista
+      los trabajos con `pdf_error = 1` del usuario, reintenta sobre el
+      `trabajo_id` existente (reusa `_generar_y_adjuntar_pdf` de
+      `presupuesto.py`) y limpia la marca si tiene éxito. No crea un
+      `Trabajo` nuevo — evita el duplicado que generaría correr
+      `/presupuesto` de nuevo con los mismos datos.
 
 ## Fase 2 / Fase 3 (fuera de alcance del MVP)
 

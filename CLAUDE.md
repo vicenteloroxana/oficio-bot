@@ -100,7 +100,8 @@ oficio-bot/
 | `/resumen` | Resumen del mes actual |
 | `/clientes` | Historial de clientes y trabajos por cliente |
 | `/perfil` | Ver o editar datos del trabajador (nombre, logo) |
-| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro) |
+| `/reintentar_pdf` | Regenera el PDF de un trabajo que falló tras 3 intentos en /presupuesto |
+| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro, reintentar_pdf) |
 | `/help` | Lista los comandos disponibles |
 
 > Cualquier comando no reconocido, o texto libre fuera de un flujo

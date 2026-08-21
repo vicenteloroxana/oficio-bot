@@ -141,6 +141,8 @@ async def test_fallo_al_generar_pdf_no_pierde_el_trabajo(db_path: str, monkeypat
     update.message.reply_document.assert_not_called()
     mensajes = [c.args[0] for c in update.message.reply_text.call_args_list]
     assert any("quedó guardado" in m for m in mensajes)
+    # El usuario debe saber qué hacer, no solo que algo falló (ver docs/backlog.md).
+    assert any("/cobrar" in m for m in mensajes)
 
     async with get_connection(db_path) as db:
         cursor = await db.execute("SELECT * FROM trabajos WHERE cliente_nombre = 'Pedro'")

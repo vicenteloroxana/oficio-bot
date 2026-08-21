@@ -107,7 +107,9 @@ async def _generar_y_adjuntar_pdf(
     await marcar_pdf_error(trabajo_id)
     await update.message.reply_text(
         "⚠️ El presupuesto quedó guardado, pero no pude generar el PDF tras "
-        f"{MAX_INTENTOS_PDF} intentos. Ya lo marqué para revisar más tarde."
+        f"{MAX_INTENTOS_PDF} intentos. Podés seguir sin el PDF por ahora — acordá "
+        "la seña con el cliente igual, y cuando cobres usá /cobrar. Ya lo marqué "
+        "para revisar el PDF más tarde."
     )
 
 

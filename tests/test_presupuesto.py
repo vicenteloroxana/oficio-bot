@@ -11,6 +11,7 @@ from database.db import (
     get_connection,
     get_usuario,
     guardar_pdf_path,
+    limpiar_pdf_error,
     marcar_pdf_error,
 )
 from database.models import Trabajo, Usuario
@@ -82,6 +83,7 @@ async def test_flujo_completo_guarda_trabajo(db_path: str, tmp_path, monkeypatch
     monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "limpiar_pdf_error", partial(limpiar_pdf_error, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "generar_pdf", lambda usuario, trabajo: str(pdf_falso))
     await crear_usuario(Usuario(telegram_id=1, nombre="Carlos", oficio="pintor"), db_path)
 
@@ -117,6 +119,7 @@ async def test_fallo_al_generar_pdf_no_pierde_el_trabajo(db_path: str, monkeypat
     monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "limpiar_pdf_error", partial(limpiar_pdf_error, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "marcar_pdf_error", partial(marcar_pdf_error, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod.asyncio, "sleep", AsyncMock())
 
@@ -141,6 +144,8 @@ async def test_fallo_al_generar_pdf_no_pierde_el_trabajo(db_path: str, monkeypat
     update.message.reply_document.assert_not_called()
     mensajes = [c.args[0] for c in update.message.reply_text.call_args_list]
     assert any("quedó guardado" in m for m in mensajes)
+    # El usuario debe saber qué hacer, no solo que algo falló (ver docs/backlog.md).
+    assert any("/cobrar" in m for m in mensajes)
 
     async with get_connection(db_path) as db:
         cursor = await db.execute("SELECT * FROM trabajos WHERE cliente_nombre = 'Pedro'")
@@ -159,6 +164,7 @@ async def test_pdf_ok_al_segundo_intento_no_marca_error(db_path: str, tmp_path, 
     monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "limpiar_pdf_error", partial(limpiar_pdf_error, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod.asyncio, "sleep", AsyncMock())
 
     intentos = []
@@ -220,6 +226,7 @@ async def test_sena_no_se_interpreta_monto_cero(db_path: str, tmp_path, monkeypa
     monkeypatch.setattr(presupuesto_mod, "get_usuario", partial(get_usuario, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "crear_trabajo", partial(crear_trabajo, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "guardar_pdf_path", partial(guardar_pdf_path, db_path=db_path))
+    monkeypatch.setattr(presupuesto_mod, "limpiar_pdf_error", partial(limpiar_pdf_error, db_path=db_path))
     monkeypatch.setattr(presupuesto_mod, "generar_pdf", lambda usuario, trabajo: str(pdf_falso))
     await crear_usuario(Usuario(telegram_id=2, nombre="Ana", oficio="electricista"), db_path)
 

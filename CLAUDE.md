@@ -100,7 +100,8 @@ oficio-bot/
 | `/resumen` | Resumen del mes actual |
 | `/clientes` | Historial de clientes y trabajos por cliente |
 | `/perfil` | Ver o editar datos del trabajador (nombre, logo) |
-| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro) |
+| `/reintentar_pdf` | Regenera el PDF de un trabajo que falló tras 3 intentos en /presupuesto |
+| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro, reintentar_pdf) |
 | `/help` | Lista los comandos disponibles |
 
 > Cualquier comando no reconocido, o texto libre fuera de un flujo
@@ -349,6 +350,34 @@ Bot: ✅ Logo guardado. Aparecerá en
   <= monto_total` en `database/models.py`) usan property-based testing
   con `hypothesis` en vez de listar casos sueltos a mano — genera
   inputs aleatorios y prueba la propiedad de forma sistemática.
+- Registrar un `ConversationHandler`/`CommandHandler` nuevo en `main.py`,
+  o tocar el orden de los `app.add_handler(...)`, exige al menos un test
+  en `tests/test_dispatch.py` que confirme que el handler nuevo no
+  intercepta (ni es interceptado por) un flujo existente — arma la
+  `Application` real con bot mockeado y verifica vía
+  `app.process_update(...)`, no invocando la función del handler
+  directo. Un test unitario de la función aislada no puede detectar
+  esto: prueba la lógica de un handler dado que se ejecutó, no si el
+  mecanismo de dispatch de `python-telegram-bot` (grupos, "gana el
+  primer handler que matchea") realmente lo eligió a él. Precedente:
+  `handlers/ayuda.py` agregó un catch-all de texto libre que, sin este
+  test, podría haberle robado mensajes a `presupuesto_handler` en medio
+  de una conversación — el test lo hubiera hecho fallar de inmediato.
+  Fuera de este caso (handler nuevo o reordenamiento), un test unitario
+  de la función alcanza.
+- Un hueco de **cobertura arquitectural** (ningún handler responde a una
+  categoría entera de update — un comando sin registrar, texto libre
+  fuera de cualquier flujo) es un `tests/test_dispatch.py` con casos
+  fijos, no `hypothesis`. Es una categoría de bug distinta a los edge
+  cases de negocio de `docs/review-rules/20-edge-cases.md` (que asumen
+  que el handler existe y prueban su lógica interna) y no es terreno de
+  property-based testing: las categorías de update relevantes (comando
+  desconocido, texto libre sin flujo activo, foto, etc.) son un conjunto
+  chico y enumerable a mano — el bug no depende de qué texto exacto
+  mandó el usuario, depende de si existe o no un handler para esa
+  categoría. Generar `Update`s aleatorios con `hypothesis` no encuentra
+  nada que un solo caso fijo por categoría no encuentre ya; sería la
+  herramienta más pesada resolviendo el problema más simple.
 - CI (`.github/workflows/tests.yml`) corre la suite en cada PR contra
   `main` y bloquea el merge si falla — es un bloqueo real, configurado
   como branch protection en GitHub (check `pytest` requerido,

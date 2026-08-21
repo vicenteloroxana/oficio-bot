@@ -16,7 +16,13 @@ from telegram.ext import (
     filters,
 )
 
-from database.db import crear_trabajo, get_usuario, guardar_pdf_path, marcar_pdf_error
+from database.db import (
+    crear_trabajo,
+    get_usuario,
+    guardar_pdf_path,
+    limpiar_pdf_error,
+    marcar_pdf_error,
+)
 from database.models import Trabajo
 from services.pdf_service import generar_pdf
 
@@ -93,6 +99,7 @@ async def _generar_y_adjuntar_pdf(
             # WeasyPrint es sync — se corre en un thread aparte para no bloquear el event loop.
             pdf_path = await asyncio.to_thread(generar_pdf, usuario, trabajo)
             await guardar_pdf_path(trabajo_id, pdf_path)
+            await limpiar_pdf_error(trabajo_id)
             pdf_bytes = await asyncio.to_thread(Path(pdf_path).read_bytes)
             await update.message.reply_document(pdf_bytes, filename="presupuesto.pdf")
             return
@@ -107,7 +114,9 @@ async def _generar_y_adjuntar_pdf(
     await marcar_pdf_error(trabajo_id)
     await update.message.reply_text(
         "⚠️ El presupuesto quedó guardado, pero no pude generar el PDF tras "
-        f"{MAX_INTENTOS_PDF} intentos. Ya lo marqué para revisar más tarde."
+        f"{MAX_INTENTOS_PDF} intentos. Podés seguir sin el PDF por ahora — acordá "
+        "la seña con el cliente igual, y cuando cobres usá /cobrar. Usá "
+        "/reintentar_pdf cuando quieras volver a intentar generarlo."
     )
 
 

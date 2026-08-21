@@ -95,6 +95,18 @@ async def test_resumen_cuenta_sin_sena_por_estado_actual_sin_importar_el_mes(db_
 
 
 @pytest.mark.asyncio
+async def test_resumen_sin_sena_excluye_trabajo_ya_cobrado(db_path: str) -> None:
+    """Caso real reportado: un trabajo sin seña (monto_sena=0) que ya se cobró
+    (finalizado) no debe seguir contando como 'Sin seña' — ya no es deuda viva."""
+    trabajo_id = await crear_trabajo(_trabajo(monto_total=200, monto_sena=0), db_path)
+    await marcar_cobrado(trabajo_id, FormaPago.EFECTIVO, db_path)
+
+    datos = await get_resumen_mensual(1, MES, db_path)
+
+    assert datos.cantidad_sin_sena == 0
+
+
+@pytest.mark.asyncio
 async def test_resumen_distingue_sin_sena_de_presupuestado_sin_enviar(db_path: str) -> None:
     """Caso real: un presupuestado CON seña pedida (el trabajador respondió
     'Todavía no') no debe contar como 'sin seña' — son categorías distintas.

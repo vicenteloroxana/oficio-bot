@@ -319,10 +319,12 @@ async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH)
     por estado actual, SIN filtro de fecha — un trabajo presupuestado en
     julio con seña enviada en agosto no debe "desaparecer" de ambos meses
     por quedar filtrado por creado_en.
-    Sin seña (monto_sena = 0) y presupuestado_sin_enviar (estado
-    presupuestado CON seña pedida) son mutuamente excluyentes — antes
-    "sin seña" contaba todo estado=presupuestado sin mirar el monto,
-    mezclando ambos casos bajo un nombre que no reflejaba lo que medía.
+    Sin seña (estado=presupuestado, monto_sena = 0) y
+    presupuestado_sin_enviar (estado=presupuestado, seña pedida) son
+    mutuamente excluyentes y ambas exigen estado=presupuestado — deuda
+    viva, igual criterio que "Pendiente". Sin ese filtro de estado, un
+    trabajo sin seña ya cobrado o cancelado seguía contando como "Sin
+    seña" para siempre.
     Solo total_trabajos se filtra por creado_en del mes (trabajos generados).
     """
     async with get_connection(db_path) as db:
@@ -336,7 +338,7 @@ async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH)
                        THEN monto_total - monto_sena ELSE 0 END), 0) AS monto_pendiente,
                    SUM(CASE WHEN estado IN (?, ?)
                        THEN 1 ELSE 0 END) AS cantidad_pendientes,
-                   SUM(CASE WHEN monto_sena = 0
+                   SUM(CASE WHEN estado = ? AND monto_sena = 0
                        THEN 1 ELSE 0 END) AS cantidad_sin_sena,
                    SUM(CASE WHEN estado = ? AND monto_sena > 0
                        THEN 1 ELSE 0 END) AS cantidad_presupuestado_sin_enviar,
@@ -348,6 +350,7 @@ async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH)
                 mes,
                 EstadoTrabajo.SENA_ENVIADA.value, EstadoTrabajo.SENA_COBRADA.value,
                 EstadoTrabajo.SENA_ENVIADA.value, EstadoTrabajo.SENA_COBRADA.value,
+                EstadoTrabajo.PRESUPUESTADO.value,
                 EstadoTrabajo.PRESUPUESTADO.value,
                 mes,
                 usuario_id,

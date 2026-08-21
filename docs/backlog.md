@@ -116,6 +116,17 @@ Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
 - [ ] `assets/logo_default.png` es un placeholder genérico (círculo + silueta,
       generado con Pillow) para no bloquear el Momento 1 — no es un diseño
       final. Revisar/reemplazar cuando se implemente `/perfil` (Momento 6).
+- [x] Reintento automático de PDF cuando falla en `/presupuesto`: si
+      `generar_pdf` explota (ver ítem de WeasyPrint/Railway arriba), se
+      reintenta hasta `MAX_INTENTOS_PDF` (3) veces con una espera corta
+      entre intentos. El `Trabajo` ya está guardado antes del PDF, así que
+      nunca se pierde. Si se agotan los intentos, se marca `pdf_error = 1`
+      en el trabajo (columna nueva, ver CLAUDE.md) y se avisa al usuario.
+- [ ] Regeneración manual del PDF para un trabajo con `pdf_error = 1`: hoy
+      no hay comando para reintentar solo el PDF de un trabajo ya creado —
+      depende de que exista `/pendientes` (Momento no implementado aún,
+      solo mencionado en `CLAUDE.md`) o un comando dedicado para listar
+      trabajos con `pdf_error = 1` y regenerar.
 
 ## Fase 2 / Fase 3 (fuera de alcance del MVP)
 

@@ -4,6 +4,7 @@ Ver CLAUDE.md — Momento 1. 4 pasos (cliente → descripción → monto → se�
 guarda el Trabajo en estado `presupuestado`, genera el PDF y lo envía.
 """
 import asyncio
+import logging
 from pathlib import Path
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, Update
@@ -15,11 +16,15 @@ from telegram.ext import (
     filters,
 )
 
-from database.db import crear_trabajo, get_usuario, guardar_pdf_path
+from database.db import crear_trabajo, get_usuario, guardar_pdf_path, marcar_pdf_error
 from database.models import Trabajo
 from services.pdf_service import generar_pdf
 
+logger = logging.getLogger(__name__)
+
 ESPERANDO_CLIENTE, ESPERANDO_DESCRIPCION, ESPERANDO_MONTO, ESPERANDO_SENA = range(4)
+MAX_INTENTOS_PDF = 3
+ESPERA_ENTRE_INTENTOS_SEG = 2
 
 
 async def presupuesto(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -75,6 +80,37 @@ async def recibir_monto(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return ESPERANDO_SENA
 
 
+async def _generar_y_adjuntar_pdf(
+    update: Update, usuario, trabajo: Trabajo, trabajo_id: int
+) -> None:
+    """Reintenta generar_pdf hasta MAX_INTENTOS_PDF veces y adjunta el resultado.
+
+    Si se agotan los intentos, marca pdf_error=True en el trabajo y avisa
+    al usuario — el Trabajo en sí ya está guardado, no se pierde nada.
+    """
+    for intento in range(1, MAX_INTENTOS_PDF + 1):
+        try:
+            # WeasyPrint es sync — se corre en un thread aparte para no bloquear el event loop.
+            pdf_path = await asyncio.to_thread(generar_pdf, usuario, trabajo)
+            await guardar_pdf_path(trabajo_id, pdf_path)
+            pdf_bytes = await asyncio.to_thread(Path(pdf_path).read_bytes)
+            await update.message.reply_document(pdf_bytes, filename="presupuesto.pdf")
+            return
+        except Exception:
+            logger.exception(
+                "Intento %s/%s: fallo al generar/enviar el PDF del trabajo %s",
+                intento, MAX_INTENTOS_PDF, trabajo_id,
+            )
+            if intento < MAX_INTENTOS_PDF:
+                await asyncio.sleep(ESPERA_ENTRE_INTENTOS_SEG)
+
+    await marcar_pdf_error(trabajo_id)
+    await update.message.reply_text(
+        "⚠️ El presupuesto quedó guardado, pero no pude generar el PDF tras "
+        f"{MAX_INTENTOS_PDF} intentos. Ya lo marqué para revisar más tarde."
+    )
+
+
 async def _guardar_y_enviar_presupuesto(
     update: Update, context: ContextTypes.DEFAULT_TYPE, trabajo: Trabajo
 ) -> None:
@@ -84,10 +120,6 @@ async def _guardar_y_enviar_presupuesto(
     context.user_data.clear()
 
     usuario = await get_usuario(update.effective_user.id)
-    # WeasyPrint es sync — se corre en un thread aparte para no bloquear el event loop.
-    pdf_path = await asyncio.to_thread(generar_pdf, usuario, trabajo)
-    await guardar_pdf_path(trabajo_id, pdf_path)
-
     await update.message.reply_text(
         f"✅ Presupuesto guardado.\n\n"
         f"Cliente: {trabajo.cliente_nombre}\n"
@@ -96,8 +128,8 @@ async def _guardar_y_enviar_presupuesto(
         f"Seña:    ${trabajo.monto_sena:.0f}",
         reply_markup=ReplyKeyboardRemove(),
     )
-    pdf_bytes = await asyncio.to_thread(Path(pdf_path).read_bytes)
-    await update.message.reply_document(pdf_bytes, filename="presupuesto.pdf")
+
+    await _generar_y_adjuntar_pdf(update, usuario, trabajo, trabajo_id)
 
     if trabajo.monto_sena > 0:
         # El recordatorio automático (Momento 2) solo arranca a contar una vez

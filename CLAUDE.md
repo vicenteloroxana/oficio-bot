@@ -77,6 +77,7 @@ oficio-bot/
 | monto_sena | REAL | Seña acordada (puede ser 0) |
 | estado | TEXT | presupuestado / sena_enviada / sena_cobrada / finalizado / cancelado |
 | pdf_path | TEXT | Ruta al PDF generado |
+| pdf_error | INTEGER | 1 si se agotaron los reintentos de generar_pdf (ver Momento 1) |
 | forma_pago | TEXT | efectivo / transferencia / mp (null hasta el cobro final) |
 | creado_en | DATETIME | Fecha de creación |
 | cobrado_en | DATETIME | Fecha de cobro final (null si pendiente) |

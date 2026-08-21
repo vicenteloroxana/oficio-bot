@@ -21,6 +21,14 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [x] CI (`.github/workflows/tests.yml`) — pytest en cada PR contra `main`, bloquea merge si falla
 - [x] `tests/` — pytest + pytest-asyncio (unitarios) y hypothesis (property-based
       para invariantes numéricas, ej. `monto_sena <= monto_total`)
+- [x] `tests/test_dispatch.py` — test de integración sobre `Application` real
+      (bot mockeado, sin red) para cobertura arquitectural: detecta comandos/
+      mensajes sin ningún handler que los atienda, y que el fallback global no
+      le robe mensajes a un `ConversationHandler` con estado activo. Los tests
+      unitarios existentes (por función de handler) no pueden detectar la
+      *ausencia* de un handler ni el orden de dispatch — origen: un comando
+      desconocido y un texto libre fuera de flujo quedaban en silencio total
+      sin que ningún test lo marcara.
 
 ## Momento 0 — Primer contacto (`/start`)
 

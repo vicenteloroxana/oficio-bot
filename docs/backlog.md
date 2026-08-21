@@ -121,9 +121,11 @@ Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
       contenedor real de deploy. Si Railway usa una imagen sin esas
       libs del sistema, la generación de PDF va a fallar en producción
       aunque los tests pasen en CI.
-- [ ] `assets/logo_default.png` es un placeholder genérico (círculo + silueta,
-      generado con Pillow) para no bloquear el Momento 1 — no es un diseño
-      final. Revisar/reemplazar cuando se implemente `/perfil` (Momento 6).
+- [ ] `assets/logo_default.png` quedó huérfano en el repo: se decidió que
+      si el usuario no tiene logo, el PDF simplemente no muestra imagen en
+      el header (en vez del placeholder genérico círculo + silueta que
+      mostraba antes). El archivo sigue en `assets/` por si se retoma un
+      logo por defecto más adelante — evaluar si borrarlo o darle uso real.
 - [x] Reintento automático de PDF cuando falla en `/presupuesto`: si
       `generar_pdf` explota (ver ítem de WeasyPrint/Railway arriba), se
       reintenta hasta `MAX_INTENTOS_PDF` (3) veces con una espera corta

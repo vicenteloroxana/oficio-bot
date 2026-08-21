@@ -52,10 +52,20 @@ oficio-bot/
 ├── templates/
 │   └── presupuesto.html    ← diseño del PDF en HTML/CSS
 └── assets/
-    └── logo_default.png    ← logo genérico cuando el usuario no tiene uno
+    └── logo_default.png    ← sin usar en el PDF (ver docs/backlog.md);
+                               si el usuario no tiene logo, el header
+                               del presupuesto simplemente no lo muestra
 ```
 
 ## Modelo de datos — tablas SQLite
+
+> Todo campo `DATETIME` (`creado_en`, `enviado_en`, `cobrado_en`) se guarda
+> en horario Argentina (`America/Argentina/Buenos_Aires`), calculado en
+> Python con `database.db.ahora_argentina()` — nunca con `CURRENT_TIMESTAMP`
+> de SQLite, que es siempre UTC. Guardar en UTC corría la fecha al día
+> siguiente para cualquier hora entre las 21:00 y 23:59 hora Argentina
+> (UTC-3), afectando el PDF de `/presupuesto` y el filtrado por mes de
+> `/resumen`.
 
 ### usuarios
 | campo | tipo | descripción |

@@ -8,7 +8,7 @@ from datetime import datetime
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from database.db import get_resumen_mensual
+from database.db import ahora_argentina, get_resumen_mensual
 from database.models import ResumenMensual
 
 _MESES = [
@@ -31,7 +31,7 @@ def _texto_resumen(resumen: ResumenMensual, fecha: datetime) -> str:
 
 async def resumen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Punto de entrada de /resumen. Sin lógica de estado, solo consulta y responde."""
-    ahora = datetime.now()
+    ahora = ahora_argentina()
     mes = ahora.strftime("%Y-%m")
     datos = await get_resumen_mensual(update.effective_user.id, mes)
     await update.message.reply_text(_texto_resumen(datos, ahora))

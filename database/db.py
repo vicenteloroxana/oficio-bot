@@ -5,7 +5,9 @@ models.py validan los datos antes de que lleguen acá.
 """
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from typing import AsyncIterator
+from zoneinfo import ZoneInfo
 
 import aiosqlite
 
@@ -20,6 +22,25 @@ from database.models import (
 )
 
 DB_PATH = os.getenv("DB_PATH", "oficio_bot.db")
+ZONA_HORARIA = ZoneInfo("America/Argentina/Buenos_Aires")
+
+
+def ahora_argentina() -> datetime:
+    """Hora actual en horario Argentina, naive (sin tzinfo).
+
+    SQLite's CURRENT_TIMESTAMP es siempre UTC — usar ese default corría
+    la fecha guardada al día siguiente para cualquier hora entre las
+    21:00 y 23:59 hora Argentina (UTC-3). Se calcula acá y se pasa
+    explícito en cada INSERT/UPDATE en vez de depender del default de
+    columna. Para guardar en SQLite usar _iso(ahora_argentina()), no el
+    datetime directo — el adapter automático de sqlite3 está deprecado.
+    """
+    return datetime.now(ZONA_HORARIA).replace(tzinfo=None)
+
+
+def _iso(momento: datetime) -> str:
+    """Formatea un datetime naive como string ISO para pasar a SQLite."""
+    return momento.isoformat(sep=" ")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -87,8 +108,8 @@ async def crear_usuario(usuario: Usuario, db_path: str = DB_PATH) -> None:
     """Inserta un usuario nuevo (nombre + oficio, sin logo)."""
     async with get_connection(db_path) as db:
         await db.execute(
-            "INSERT INTO usuarios (telegram_id, nombre, oficio) VALUES (?, ?, ?)",
-            (usuario.telegram_id, usuario.nombre, usuario.oficio),
+            "INSERT INTO usuarios (telegram_id, nombre, oficio, creado_en) VALUES (?, ?, ?, ?)",
+            (usuario.telegram_id, usuario.nombre, usuario.oficio, _iso(ahora_argentina())),
         )
         await db.commit()
 
@@ -126,8 +147,8 @@ async def crear_trabajo(trabajo: Trabajo, db_path: str = DB_PATH) -> int:
     async with get_connection(db_path) as db:
         cursor = await db.execute(
             """INSERT INTO trabajos
-               (usuario_id, cliente_nombre, descripcion, monto_total, monto_sena, estado)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+               (usuario_id, cliente_nombre, descripcion, monto_total, monto_sena, estado, creado_en)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (
                 trabajo.usuario_id,
                 trabajo.cliente_nombre,
@@ -135,6 +156,7 @@ async def crear_trabajo(trabajo: Trabajo, db_path: str = DB_PATH) -> int:
                 trabajo.monto_total,
                 trabajo.monto_sena,
                 trabajo.estado.value,
+                _iso(ahora_argentina()),
             ),
         )
         await db.commit()
@@ -171,17 +193,18 @@ async def marcar_sena_enviada(trabajo_id: int, db_path: str = DB_PATH) -> None:
 
 async def get_trabajos_para_recordar(dias: int, db_path: str = DB_PATH) -> list[Trabajo]:
     """Trabajos con seña enviada hace >= `dias` días y sin recordatorio marcado como pagado."""
+    limite = ahora_argentina() - timedelta(days=dias)
     async with get_connection(db_path) as db:
         cursor = await db.execute(
             """SELECT * FROM trabajos
                WHERE estado = ?
-                 AND datetime(creado_en) <= datetime('now', ?)
+                 AND creado_en <= ?
                  AND id NOT IN (
                      SELECT trabajo_id FROM recordatorios WHERE respuesta = ?
                  )""",
             (
                 EstadoTrabajo.SENA_ENVIADA.value,
-                f"-{dias} days",
+                _iso(limite),
                 RespuestaRecordatorio.MARCADO_PAGADO.value,
             ),
         )
@@ -193,7 +216,8 @@ async def crear_recordatorio(trabajo_id: int, db_path: str = DB_PATH) -> None:
     """Registra el envío de un recordatorio de pago."""
     async with get_connection(db_path) as db:
         await db.execute(
-            "INSERT INTO recordatorios (trabajo_id) VALUES (?)", (trabajo_id,)
+            "INSERT INTO recordatorios (trabajo_id, enviado_en) VALUES (?, ?)",
+            (trabajo_id, _iso(ahora_argentina())),
         )
         await db.commit()
 
@@ -256,9 +280,9 @@ async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = 
     """Cierra un trabajo: pasa a finalizado, guarda forma de pago y fecha de cobro."""
     async with get_connection(db_path) as db:
         await db.execute(
-            """UPDATE trabajos SET estado = ?, forma_pago = ?, cobrado_en = CURRENT_TIMESTAMP
+            """UPDATE trabajos SET estado = ?, forma_pago = ?, cobrado_en = ?
                WHERE id = ?""",
-            (EstadoTrabajo.FINALIZADO.value, forma_pago.value, trabajo_id),
+            (EstadoTrabajo.FINALIZADO.value, forma_pago.value, _iso(ahora_argentina()), trabajo_id),
         )
         await db.commit()
 

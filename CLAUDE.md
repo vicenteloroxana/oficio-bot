@@ -111,7 +111,8 @@ oficio-bot/
 | `/clientes` | Historial de clientes y trabajos por cliente |
 | `/perfil` | Ver o editar datos del trabajador (nombre, logo) |
 | `/reintentar_pdf` | Regenera el PDF de un trabajo que falló tras 3 intentos en /presupuesto |
-| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro, reintentar_pdf) |
+| `/confirmar_envio` | Avisa que se mandó un presupuesto con seña tras responder "Todavía no" |
+| `/cancel` | Cancela el flujo conversacional en curso (registro, presupuesto, cobro, reintentar_pdf, confirmar_envio) |
 | `/help` | Lista los comandos disponibles |
 
 > Cualquier comando no reconocido, o texto libre fuera de un flujo
@@ -200,6 +201,11 @@ Bot: ✅ Listo, te aviso si no llega el pago a tiempo.
 > si no se pidió, el flujo termina en el PDF sin preguntar nada más.
 > El link de pago de Mercado Pago (mostrado en versiones previas de este
 > mockup) es fase 2 — no implementado todavía.
+> El botón `[Sí]`/`[Todavía no]` solo aparece una vez, en este momento del
+> flujo. Si el trabajador toca `[Todavía no]`, el trabajo queda en estado
+> `presupuestado`; usa `/confirmar_envio` más tarde para pasar a
+> `sena_enviada` sin tener que repetir `/presupuesto` (que crearía un
+> `Trabajo` duplicado con los mismos datos).
 
 ---
 
@@ -256,9 +262,16 @@ Bot: 📊 Tu resumen — Agosto 2026
      ✅ Cobrado:    $360.000 (4 trabajos)
      ⏳ Pendiente:  $180.000 (2 trabajos)
      ❌ Sin seña:   1 trabajo (López)
+     📤 Presupuestado sin enviar: 1 trabajo
 
      Trabajos este mes: 6
 ```
+> "Sin seña" (`monto_sena = 0`) y "Presupuestado sin enviar" (`estado =
+> presupuestado` con seña pedida — el trabajador respondió "Todavía no"
+> al momento de generar el presupuesto, ver Momento 1 y `/confirmar_envio`)
+> son categorías mutuamente excluyentes, ambas dentro de `estado =
+> presupuestado`. No se solapan con "Pendiente" (`sena_enviada` o
+> `sena_cobrada`).
 
 ---
 

@@ -14,6 +14,7 @@ TEXTO_AYUDA = (
     "/resumen — ver el resumen del mes actual\n"
     "/perfil — ver o editar tus datos (nombre, logo)\n"
     "/reintentar_pdf — regenerar el PDF de un trabajo que falló\n"
+    "/confirmar_envio — avisar que mandaste un presupuesto pendiente\n"
     "/cancel — cancelar el paso en curso\n"
     "/help — ver esta ayuda"
 )

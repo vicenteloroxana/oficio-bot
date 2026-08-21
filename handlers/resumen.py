@@ -24,7 +24,8 @@ def _texto_resumen(resumen: ResumenMensual, fecha: datetime) -> str:
         f"📊 Tu resumen — {titulo}\n\n"
         f"✅ Cobrado:    ${resumen.monto_cobrado:.0f} ({resumen.cantidad_cobrados} trabajos)\n"
         f"⏳ Pendiente:  ${resumen.monto_pendiente:.0f} ({resumen.cantidad_pendientes} trabajos)\n"
-        f"❌ Sin seña:   {resumen.cantidad_sin_sena} trabajo(s)\n\n"
+        f"❌ Sin seña:   {resumen.cantidad_sin_sena} trabajo(s)\n"
+        f"📤 Presupuestado sin enviar: {resumen.cantidad_presupuestado_sin_enviar} trabajo(s)\n\n"
         f"Trabajos este mes: {resumen.total_trabajos}"
     )
 

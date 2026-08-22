@@ -1,0 +1,7 @@
+
+# WeasyPrint (services/pdf_service.py) necesita las librerías nativas de
+# Pango/GObject/Cairo en tiempo de ejecución. Nixpacks no las instala solas
+# a partir de requirements.txt (son binarios del sistema, no paquetes pip)
+# — ver docs/adr/001-stack-tecnologico.md.
+[phases.setup]
+nixPkgs = ["pango"]

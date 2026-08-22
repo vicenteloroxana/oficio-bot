@@ -35,8 +35,31 @@ async def post_init(application: Application) -> None:
     logger.info("Base de datos inicializada")
 
 
+def config_webhook(token: str, env: dict[str, str]) -> dict[str, str | int] | None:
+    """Arma los kwargs de run_webhook, o None si corresponde polling.
+
+    Railway inyecta RAILWAY_PUBLIC_DOMAIN solo cuando el servicio tiene
+    dominio público — su presencia es la señal de "estamos en Railway".
+    """
+    dominio = env.get("RAILWAY_PUBLIC_DOMAIN")
+    if not dominio:
+        return None
+    return {
+        "listen": "0.0.0.0",
+        "port": int(env.get("PORT", "8080")),
+        "url_path": token,
+        "webhook_url": f"https://{dominio}/{token}",
+    }
+
+
 def main() -> None:
-    """Configura y arranca el bot en modo polling."""
+    """Configura el bot y lo arranca en polling (local) o webhook (Railway).
+
+    El modo se elige solo: si Railway inyectó RAILWAY_PUBLIC_DOMAIN (pasa
+    automáticamente en cualquier servicio con dominio público, sin config
+    manual) se usa webhook contra esa URL; si no, polling — el modo de
+    desarrollo local que no requiere URL pública. Ver docs/adr/001.
+    """
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN en las variables de entorno")
@@ -56,8 +79,13 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensaje_no_reconocido))
     registrar_recordatorios(app)
 
-    logger.info("Bot iniciado")
-    app.run_polling()
+    webhook_kwargs = config_webhook(token, os.environ)
+    if webhook_kwargs:
+        logger.info("Bot iniciado en modo webhook (%s)", webhook_kwargs["webhook_url"])
+        app.run_webhook(**webhook_kwargs)
+    else:
+        logger.info("Bot iniciado en modo polling")
+        app.run_polling()
 
 
 if __name__ == "__main__":

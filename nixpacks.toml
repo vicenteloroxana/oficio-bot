@@ -4,4 +4,4 @@
 # a partir de requirements.txt (son binarios del sistema, no paquetes pip)
 # — ver docs/adr/001-stack-tecnologico.md.
 [phases.setup]
-nixPkgs = ["pango"]
+nixPkgs = ["...", "pango"]

@@ -112,15 +112,20 @@ Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
       reinicio no duplica recordatorios (se re-arma desde `recordatorios` en
       BD) pero sí puede demorar el próximo chequeo hasta `first=10s` después
       del arranque.
-- [ ] Migración de polling a webhooks al deployar en Railway (ver ADR-001)
-      — transversal, no de un Momento puntual; también condiciona
-      Mercado Pago en Fase 2 (ver abajo)
-- [ ] Runtime nativo de WeasyPrint (Pango/Cairo/GObject) en el entorno de
-      Railway, para Momento 1 (`services/pdf_service.py`) — CI (Ubuntu)
-      ya lo instala vía `apt-get`, pero no está verificado en el
-      contenedor real de deploy. Si Railway usa una imagen sin esas
-      libs del sistema, la generación de PDF va a fallar en producción
-      aunque los tests pasen en CI.
+- [x] Migración de polling a webhooks al deployar en Railway (ver ADR-001):
+      `main.py` elige el modo solo según `RAILWAY_PUBLIC_DOMAIN`
+      (inyectada por Railway al generar dominio público) — sin variable
+      manual que setear. También condicionaba Mercado Pago en Fase 2
+      (ver abajo), que sigue sin implementar.
+- [x] Runtime nativo de WeasyPrint (Pango/Cairo/GObject) en el entorno de
+      Railway, para Momento 1 (`services/pdf_service.py`): confirmado en
+      producción que Nixpacks (builder por default de Railway) no expone
+      esas libs en runtime aunque se declaren como `nixPkgs` explícitos
+      (`OSError: cannot load library 'libgobject-2.0-0'` persistía).
+      Resuelto migrando el build a un `Dockerfile` propio con
+      `apt-get install` de las libs, siguiendo la guía oficial de
+      instalación de WeasyPrint para Debian/Ubuntu — mismo enfoque que
+      ya usaba CI (Ubuntu) para instalarlas, ahora también en producción.
 - [ ] `assets/logo_default.png` quedó huérfano en el repo: se decidió que
       si el usuario no tiene logo, el PDF simplemente no muestra imagen en
       el header (en vez del placeholder genérico círculo + silueta que

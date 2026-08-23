@@ -17,6 +17,7 @@ from database.db import (
     crear_recordatorio,
     get_trabajo,
     get_trabajos_para_recordar,
+    marcar_cancelado,
     marcar_sena_enviada,
     responder_ultimo_recordatorio,
 )
@@ -45,6 +46,9 @@ async def revisar_pendientes(context: ContextTypes.DEFAULT_TYPE) -> None:
                     [
                         InlineKeyboardButton(
                             "Marcar como pagado", callback_data=f"recordatorio_pagado:{trabajo.id}"
+                        ),
+                        InlineKeyboardButton(
+                            "Cliente no aceptó", callback_data=f"recordatorio_cancelado:{trabajo.id}"
                         ),
                         InlineKeyboardButton(
                             "Ignorar", callback_data=f"recordatorio_ignorar:{trabajo.id}"
@@ -91,6 +95,10 @@ async def responder_recordatorio(update: Update, context: ContextTypes.DEFAULT_T
         await query.edit_message_text(
             f"✅ Marcado como pagado — {trabajo.cliente_nombre}, seña ${trabajo.monto_sena:.0f}."
         )
+    elif accion == "recordatorio_cancelado":
+        await responder_ultimo_recordatorio(trabajo_id, RespuestaRecordatorio.CLIENTE_NO_ACEPTO)
+        await marcar_cancelado(trabajo_id)
+        await query.edit_message_text("Ok, trabajo cancelado.")
     else:
         await responder_ultimo_recordatorio(trabajo_id, RespuestaRecordatorio.IGNORADO)
         await query.edit_message_text("Ok, te vuelvo a avisar más adelante.")
@@ -99,5 +107,5 @@ async def responder_recordatorio(update: Update, context: ContextTypes.DEFAULT_T
 def registrar_recordatorios(app: Application) -> None:
     """Registra los callback handlers y agenda el job periódico de recordatorios."""
     app.add_handler(CallbackQueryHandler(confirmar_sena_enviada, pattern=r"^sena_enviada:"))
-    app.add_handler(CallbackQueryHandler(responder_recordatorio, pattern=r"^recordatorio_(pagado|ignorar):"))
+    app.add_handler(CallbackQueryHandler(responder_recordatorio, pattern=r"^recordatorio_(pagado|cancelado|ignorar):"))
     app.job_queue.run_repeating(revisar_pendientes, interval=CHECK_INTERVAL_SECONDS, first=10)

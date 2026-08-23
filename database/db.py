@@ -300,6 +300,21 @@ async def marcar_cobrado(trabajo_id: int, forma_pago: FormaPago, db_path: str = 
         await db.commit()
 
 
+async def marcar_cancelado(trabajo_id: int, db_path: str = DB_PATH) -> None:
+    """Cancela un trabajo porque el cliente no aceptó el presupuesto.
+
+    Se llama desde el botón [Cliente no aceptó], tanto en el recordatorio
+    automático (Momento 2) como en /pendientes (Momento 5) — mismo cambio
+    de estado, dos puntos de entrada.
+    """
+    async with get_connection(db_path) as db:
+        await db.execute(
+            "UPDATE trabajos SET estado = ? WHERE id = ?",
+            (EstadoTrabajo.CANCELADO.value, trabajo_id),
+        )
+        await db.commit()
+
+
 _CAMPOS_ENTEROS_RESUMEN = (
     "cantidad_cobrados", "cantidad_pendientes", "cantidad_sin_sena",
     "cantidad_presupuestado_sin_enviar", "total_trabajos",

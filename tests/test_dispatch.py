@@ -18,6 +18,7 @@ from telegram import Chat, Message, MessageEntity, Update, User
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from handlers.ayuda import ayuda, comando_no_reconocido, mensaje_no_reconocido
+from handlers.pendientes import pendientes, pendientes_callback_handler
 from handlers.presupuesto import presupuesto_handler
 
 
@@ -29,6 +30,8 @@ async def _app() -> tuple[Application, AsyncMock]:
     app = Application.builder().bot(bot).build()
     app.add_handler(presupuesto_handler)
     app.add_handler(CommandHandler("help", ayuda))
+    app.add_handler(CommandHandler("pendientes", pendientes))
+    app.add_handler(pendientes_callback_handler)
     app.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensaje_no_reconocido))
     await app.initialize()
@@ -69,6 +72,20 @@ async def test_texto_libre_sin_flujo_activo_recibe_respuesta() -> None:
     await app.process_update(_update("en que quedamos", 1, app.bot))
 
     send_message.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_pendientes_no_es_interceptado_por_catch_all(monkeypatch) -> None:
+    """/pendientes debe ser atendido por su propio handler, no por comando_no_reconocido."""
+    monkeypatch.setattr(
+        "handlers.pendientes.get_trabajos_pendientes", AsyncMock(return_value=[])
+    )
+    app, send_message = await _app()
+
+    await app.process_update(_update("/pendientes", 1, app.bot))
+
+    send_message.assert_called_once()
+    assert "No tenés trabajos pendientes" in send_message.call_args.kwargs["text"]
 
 
 @pytest.mark.asyncio

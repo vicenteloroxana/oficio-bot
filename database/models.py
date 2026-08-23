@@ -95,3 +95,17 @@ class ResumenMensual(BaseModel):
     cantidad_sin_sena: int = Field(ge=0)
     cantidad_presupuestado_sin_enviar: int = Field(ge=0)
     total_trabajos: int = Field(ge=0)
+
+
+class ClienteResumen(BaseModel):
+    """Agregado de un cliente para la lista de /clientes (Momento 6).
+
+    Solo incluye clientes con al menos un trabajo no cancelado — un
+    cliente cuyo único trabajo fue cancelado no ensucia la lista
+    principal (sigue visible en el detalle si se llega a él por otro
+    trabajo, pero no genera una fila propia).
+    """
+    cliente_nombre: str
+    cantidad_trabajos: int = Field(ge=0)
+    monto_cobrado: float = Field(ge=0)
+    tiene_pendiente: bool

@@ -31,7 +31,11 @@ elif path.endswith("main.py") or ("/handlers/" in f"/{path}" and path.endswith("
         "conversacionales' de CLAUDE.md. Si esta desincronizada, avisale al "
         "usuario que la doc quedo desactualizada y preguntale si la "
         "actualizas (CLAUDE.md es la especificacion estable del proyecto, "
-        "no se edita en silencio)."
+        "no se edita en silencio). Si agregaste un comando nuevo (nuevo "
+        "CommandHandler), revisa tambien que TEXTO_AYUDA en "
+        "handlers/ayuda.py lo liste -- es un archivo hermano que este "
+        "hook no dispara por separado, y quedo desactualizado la ultima "
+        "vez que se agregaron /pendientes y /clientes sin tocarlo."
     )
 else:
     mensaje = None

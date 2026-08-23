@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 import aiosqlite
 
 from database.models import (
+    ClienteResumen,
     EstadoTrabajo,
     FormaPago,
     Recordatorio,
@@ -324,6 +325,52 @@ _CAMPOS_ENTEROS_RESUMEN = (
 def _normalizar_conteos_resumen(fila: dict) -> dict:
     """SUM sobre 0 filas da NULL en SQLite: lo normaliza a 0 para los campos enteros."""
     return {**fila, **{campo: fila[campo] or 0 for campo in _CAMPOS_ENTEROS_RESUMEN}}
+
+
+async def get_clientes_resumen(usuario_id: int, db_path: str = DB_PATH) -> list[ClienteResumen]:
+    """Agregado por cliente para /clientes (Momento 6), excluye clientes solo-cancelados.
+
+    monto_cobrado: solo trabajos finalizado. tiene_pendiente: existe algún
+    trabajo presupuestado/sena_enviada/sena_cobrada. cantidad_trabajos
+    cuenta todos los no cancelados (finalizado + pendientes).
+    """
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT
+                   cliente_nombre,
+                   COUNT(*) AS cantidad_trabajos,
+                   COALESCE(SUM(CASE WHEN estado = ? THEN monto_total ELSE 0 END), 0) AS monto_cobrado,
+                   MAX(CASE WHEN estado IN (?, ?, ?) THEN 1 ELSE 0 END) AS tiene_pendiente
+               FROM trabajos
+               WHERE usuario_id = ? AND estado != ?
+               GROUP BY cliente_nombre
+               ORDER BY cliente_nombre""",
+            (
+                EstadoTrabajo.FINALIZADO.value,
+                EstadoTrabajo.PRESUPUESTADO.value, EstadoTrabajo.SENA_ENVIADA.value, EstadoTrabajo.SENA_COBRADA.value,
+                usuario_id,
+                EstadoTrabajo.CANCELADO.value,
+            ),
+        )
+        filas = await cursor.fetchall()
+        return [
+            ClienteResumen(**{**dict(fila), "tiene_pendiente": bool(fila["tiene_pendiente"])})
+            for fila in filas
+        ]
+
+
+async def get_trabajos_de_cliente(
+    usuario_id: int, cliente_nombre: str, db_path: str = DB_PATH
+) -> list[Trabajo]:
+    """Todos los trabajos de un cliente (incluye cancelados) para el detalle de /clientes."""
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            """SELECT * FROM trabajos WHERE usuario_id = ? AND cliente_nombre = ?
+               ORDER BY creado_en""",
+            (usuario_id, cliente_nombre),
+        )
+        filas = await cursor.fetchall()
+        return [Trabajo(**dict(fila)) for fila in filas]
 
 
 async def get_resumen_mensual(usuario_id: int, mes: str, db_path: str = DB_PATH) -> ResumenMensual:

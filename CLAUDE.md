@@ -319,7 +319,7 @@ Trabajador: /clientes
 
 Bot: 👥 Tus clientes
 
-     1. Juan López — 3 trabajos — $450.000 cobrado
+     1. Juan López — 3 trabajos — $450.000 cobrado, pendiente de cobro
      2. María García — 1 trabajo — pendiente de cobro
      3. Carlos Díaz — 2 trabajos — $220.000 cobrado
 
@@ -329,13 +329,23 @@ Trabajador: 1
 
 Bot: 📋 Juan López
      ─────────────────────
-     ✅ Pintura living     $180.000  ago 2026
-     ✅ Pintura habitación $150.000  jul 2026
-     ⏳ Electricidad       $120.000  pendiente
+     ✅ Pintura living — $180.000 — ago 2026
+     ✅ Pintura habitación — $150.000 — jul 2026
+     ⏳ Electricidad — $120.000 — pendiente
      ─────────────────────
      Total cobrado: $330.000
      Total pendiente: $120.000
 ```
+> El estado por cliente en la lista muestra ambas cosas cuando aplican
+> (cobrado y pendiente no son excluyentes: un mismo cliente puede tener
+> un trabajo ya finalizado y otro todavía activo) — ver ejemplo de Juan
+> López arriba, con 3 trabajos que combinan las dos categorías.
+> La lista principal (`get_clientes_resumen`) excluye clientes cuyo único
+> trabajo fue `cancelado` — no ensucian el historial con actividad que
+> nunca prosperó. El detalle (`get_trabajos_de_cliente`), en cambio,
+> muestra el historial completo del cliente elegido, cancelados
+> incluidos (ícono `❌`), sin sumarlos a "Total cobrado" ni "Total
+> pendiente" — mismo criterio que `/resumen` y `/pendientes`.
 
 ---
 

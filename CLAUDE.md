@@ -120,7 +120,7 @@ oficio-bot/
 > avisa al usuario y lo redirige a `/help` — evita el silencio total que
 > daba `python-telegram-bot` cuando ningún handler matcheaba el update.
 
-## Flujos conversacionales — los 4 momentos del bot
+## Flujos conversacionales — los momentos del bot
 
 ### Momento 0 — Primer contacto (`/start`)
 ```
@@ -206,6 +206,9 @@ Bot: ✅ Listo, te aviso si no llega el pago a tiempo.
 > `presupuestado`; usa `/confirmar_envio` más tarde para pasar a
 > `sena_enviada` sin tener que repetir `/presupuesto` (que crearía un
 > `Trabajo` duplicado con los mismos datos).
+> Este botón pregunta si el presupuesto fue enviado, no si el cliente lo
+> aceptó — la cancelación por rechazo del cliente se maneja en el
+> Momento 2 o desde `/pendientes`, nunca acá.
 
 ---
 
@@ -218,11 +221,15 @@ Bot: ⏰ Juan López todavía no pagó
 
      ¿Qué hacemos?
 
-     [Reenviar link]  [Marcar como pagado]  [Ignorar]
+     [Marcar como pagado]  [Cliente no aceptó]  [Ignorar]
 ```
 > Los botones se implementan como InlineKeyboardButton de Telegram.
-> "Reenviar link" solo disponible en fase 2 (Mercado Pago).
-> En fase 1 mostrar solo [Marcar como pagado] e [Ignorar].
+> "Reenviar link" (mostrado en versiones previas de este mockup) es
+> fase 2 (Mercado Pago) — no implementado todavía; en fase 1 los botones
+> son [Marcar como pagado], [Cliente no aceptó] e [Ignorar].
+> "Cliente no aceptó" pasa el trabajo a estado `cancelado`: sale de
+> `/pendientes`, sale de los agregados de `/resumen`, y en `/clientes`
+> queda visible en el detalle del cliente pero no suma a los totales.
 
 ---
 
@@ -275,7 +282,31 @@ Bot: 📊 Tu resumen — Agosto 2026
 
 ---
 
-### Momento 5 — Historial de clientes (`/clientes`)
+### Momento 5 — Trabajos pendientes de cobro (`/pendientes`)
+```
+Trabajador: /pendientes
+
+Bot: 📋 Pendientes:
+
+     1. Juan López — Pintura living (presupuestado)      [Cliente no aceptó]
+     2. María García — Electricidad (seña enviada)        [Cliente no aceptó]
+
+Trabajador: [Cliente no aceptó]  (sobre el ítem 2)
+
+Bot: ✅ Trabajo de María García marcado como cancelado.
+```
+> Lista trabajos con `estado IN (presupuestado, sena_enviada)` — todo lo
+> que no llegó a `sena_cobrada`/`finalizado`/`cancelado`.
+> Cada ítem lleva un botón `[Cliente no aceptó]` que pasa ese trabajo a
+> `cancelado`, mismo cambio de estado y mismo destino (fuera de
+> `/pendientes`, fuera de los agregados de `/resumen`, visible sin sumar
+> en el detalle de `/clientes`) que el botón homónimo del Momento 2 —
+> este es el segundo punto de entrada, para cuando el cliente rechaza
+> antes de que dispare el recordatorio automático.
+
+---
+
+### Momento 6 — Historial de clientes (`/clientes`)
 ```
 Trabajador: /clientes
 
@@ -301,7 +332,7 @@ Bot: 📋 Juan López
 
 ---
 
-### Momento 6 — Configurar perfil (`/perfil`)
+### Momento 7 — Configurar perfil (`/perfil`)
 ```
 Trabajador: /perfil
 

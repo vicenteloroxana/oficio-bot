@@ -19,7 +19,7 @@ async def test_ayuda_lista_los_comandos() -> None:
 
     texto = update.message.reply_text.call_args.args[0]
     for comando in (
-        "/presupuesto", "/cobrar", "/resumen", "/perfil",
+        "/presupuesto", "/cobrar", "/pendientes", "/resumen", "/clientes", "/perfil",
         "/reintentar_pdf", "/confirmar_envio", "/cancel", "/help",
     ):
         assert comando in texto

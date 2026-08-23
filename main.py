@@ -13,6 +13,7 @@ from database.db import init_db
 from handlers.ayuda import ayuda, comando_no_reconocido, mensaje_no_reconocido
 from handlers.cobro import cobro_callback_handler, cobro_handler
 from handlers.confirmar_envio import confirmar_envio_handler
+from handlers.pendientes import pendientes, pendientes_callback_handler
 from handlers.perfil import perfil_handler
 from handlers.presupuesto import presupuesto_handler
 from handlers.recordatorio import registrar_recordatorios
@@ -73,6 +74,8 @@ def main() -> None:
     app.add_handler(reintentar_pdf_handler)
     app.add_handler(perfil_handler)
     app.add_handler(CommandHandler("resumen", resumen))
+    app.add_handler(CommandHandler("pendientes", pendientes))
+    app.add_handler(pendientes_callback_handler)
     app.add_handler(CommandHandler("help", ayuda))
     # Catch-all: van al final para no interceptar los handlers específicos de arriba.
     app.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))

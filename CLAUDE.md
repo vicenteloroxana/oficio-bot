@@ -98,7 +98,7 @@ oficio-bot/
 | id | INTEGER PK | ID autoincremental |
 | trabajo_id | INTEGER FK | Referencia a trabajos.id |
 | enviado_en | DATETIME | Fecha en que se envió el recordatorio |
-| respuesta | TEXT | ignorado / reenviar / marcado_pagado |
+| respuesta | TEXT | ignorado / reenviar / marcado_pagado / cliente_no_acepto |
 
 ## Comandos del bot
 | Comando | Función |
@@ -288,16 +288,23 @@ Trabajador: /pendientes
 
 Bot: 📋 Pendientes:
 
-     1. Juan López — Pintura living (presupuestado)      [Cliente no aceptó]
-     2. María García — Electricidad (seña enviada)        [Cliente no aceptó]
+Bot: Juan López — Pintura living (presupuestado)
+     [Cliente no aceptó]
 
-Trabajador: [Cliente no aceptó]  (sobre el ítem 2)
+Bot: María García — Electricidad (sena_enviada)
+     [Cliente no aceptó]
 
-Bot: ✅ Trabajo de María García marcado como cancelado.
+Trabajador: [Cliente no aceptó]  (bajo el mensaje de María García)
+
+Bot: Ok, trabajo cancelado.
 ```
-> Lista trabajos con `estado IN (presupuestado, sena_enviada)` — todo lo
-> que no llegó a `sena_cobrada`/`finalizado`/`cancelado`.
-> Cada ítem lleva un botón `[Cliente no aceptó]` que pasa ese trabajo a
+> Lista trabajos con `estado NOT IN (finalizado, cancelado)` — mismo
+> filtro que ya usa `/cobrar` (`get_trabajos_pendientes`), incluye
+> `sena_cobrada` porque ese trabajo también sigue pendiente del cobro
+> final.
+> Un mensaje por trabajo (no una lista numerada única): cada uno con su
+> propio botón inline `[Cliente no aceptó]`, para no depender de que el
+> trabajador tipee un número aparte. Ese botón pasa ese trabajo a
 > `cancelado`, mismo cambio de estado y mismo destino (fuera de
 > `/pendientes`, fuera de los agregados de `/resumen`, visible sin sumar
 > en el detalle de `/clientes`) que el botón homónimo del Momento 2 —

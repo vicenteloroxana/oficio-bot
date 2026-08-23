@@ -75,6 +75,7 @@ class RespuestaRecordatorio(str, Enum):
     IGNORADO = "ignorado"
     REENVIAR = "reenviar"
     MARCADO_PAGADO = "marcado_pagado"
+    CLIENTE_NO_ACEPTO = "cliente_no_acepto"
 
 
 class Recordatorio(BaseModel):

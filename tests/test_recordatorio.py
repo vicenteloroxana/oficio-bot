@@ -11,6 +11,7 @@ from database.db import (
     get_connection,
     get_trabajo,
     get_trabajos_para_recordar,
+    marcar_cancelado,
     marcar_sena_enviada,
     responder_ultimo_recordatorio,
 )
@@ -183,6 +184,32 @@ async def test_responder_recordatorio_marcado_pagado_trabajo_inexistente(db_path
     await responder_recordatorio(update, MagicMock())
 
     update.callback_query.edit_message_text.assert_called_once_with("✅ Marcado como pagado.")
+
+
+@pytest.mark.asyncio
+async def test_responder_recordatorio_cliente_no_acepto_cancela_trabajo(db_path: str, monkeypatch) -> None:
+    """El botón [Cliente no aceptó] cancela el trabajo y registra la respuesta."""
+    trabajo_id = await _trabajo_con_sena_enviada(db_path, dias_atras=5)
+    await crear_recordatorio(trabajo_id, db_path)
+    monkeypatch.setattr(
+        recordatorio_mod, "responder_ultimo_recordatorio", partial(responder_ultimo_recordatorio, db_path=db_path)
+    )
+    monkeypatch.setattr(recordatorio_mod, "marcar_cancelado", partial(marcar_cancelado, db_path=db_path))
+
+    update = _callback_update(f"recordatorio_cancelado:{trabajo_id}")
+    await responder_recordatorio(update, MagicMock())
+
+    async with get_connection(db_path) as db:
+        cursor = await db.execute(
+            "SELECT estado FROM trabajos WHERE id = ?", (trabajo_id,)
+        )
+        fila_trabajo = await cursor.fetchone()
+        cursor = await db.execute(
+            "SELECT respuesta FROM recordatorios WHERE trabajo_id = ?", (trabajo_id,)
+        )
+        fila_recordatorio = await cursor.fetchone()
+    assert fila_trabajo["estado"] == "cancelado"
+    assert fila_recordatorio["respuesta"] == "cliente_no_acepto"
 
 
 @pytest.mark.asyncio

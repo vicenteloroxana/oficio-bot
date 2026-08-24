@@ -8,6 +8,8 @@ cliente no paga, y cierran el cobro final — **todo sin salir de Telegram**.
 
 Proyecto hecho para el concurso **CoderCup T1** de Coderhouse.
 
+👉 Probalo ya: [@mi_oficio_bot](https://t.me/mi_oficio_bot)
+
 ## El problema
 
 Un trabajador independiente arma un presupuesto a mano, lo manda por

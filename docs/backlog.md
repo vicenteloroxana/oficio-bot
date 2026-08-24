@@ -97,15 +97,13 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 
 ## Momento 6 — Historial de clientes (`/clientes`)
 
-En PR (#34), todavía no mergeado — marcar `[x]` cuando se mergee.
-
-- [ ] `handlers/clientes.py` — listar clientes con agregado (cantidad de
+- [x] `handlers/clientes.py` — listar clientes con agregado (cantidad de
       trabajos, monto cobrado, si tiene algo pendiente)
-- [ ] Detalle por cliente al seleccionar uno (`get_trabajos_de_cliente`,
+- [x] Detalle por cliente al seleccionar uno (`get_trabajos_de_cliente`,
       incluye cancelados sin sumarlos a los totales)
-- [ ] `get_clientes_resumen` excluye de la lista principal los clientes
+- [x] `get_clientes_resumen` excluye de la lista principal los clientes
       cuyo único trabajo fue cancelado
-- [ ] Tests (`tests/test_clientes.py`)
+- [x] Tests (`tests/test_clientes.py`)
 
 ## Momento 7 — Configurar perfil (`/perfil`)
 

@@ -56,6 +56,16 @@ Python 3.12 · [python-telegram-bot](https://github.com/python-telegram-bot/pyth
 
 Decisiones de arquitectura documentadas en [`docs/adr/`](docs/adr/).
 
+## Arquitectura
+
+![Diagrama de arquitectura de Oficio Bot](docs/diagrama_arquitectura.png)
+
+El trabajador manda comandos por Telegram, que los reenvía al bot
+corriendo en Railway. El bot consulta y guarda datos en la base de
+datos en cada interacción; solo cuando arma un presupuesto le pide
+además el PDF al generador de PDF — es el único paso opcional del
+flujo (línea punteada en el diagrama).
+
 ## Correr el bot en local
 
 ```bash

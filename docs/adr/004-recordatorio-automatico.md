@@ -27,7 +27,7 @@ en polling, dentro de un solo proceso, sin infraestructura de jobs externa
   pregunta nada y el trabajo nunca dispara recordatorio.
   Se prefirió esto a marcar `sena_enviada` automáticamente al crear el
   trabajo porque en fase 1 "mandar el presupuesto" es un paso manual del
-  trabajador (WhatsApp, en persona) que el bot no puede confirmar por sí
+  trabajador (reenviando el PDF fuera del bot, en persona) que el bot no puede confirmar por sí
   solo — automatizarlo sin confirmación generaría recordatorios sobre
   presupuestos que el cliente ni recibió todavía.
 - **Primer uso de botones inline en el repo.** Se implementa con

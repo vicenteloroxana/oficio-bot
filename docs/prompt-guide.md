@@ -40,7 +40,7 @@ Explica de qué trata el proyecto, tecnologías, y cuál es el problema general.
 ```
 Contexto: Bot de Telegram para trabajadores de oficio (plomeros, electricistas, etc).
 Stack: Python 3.12, python-telegram-bot async, WeasyPrint, SQLite async, pydantic.
-Problema: Los trabajadores independientes hoy manejan todo por WhatsApp y cuaderno.
+Problema: Los trabajadores independientes hoy manejan todo por servicio de mensajería (Telegram) y cuaderno.
 Restricciones: type hints en todas las funciones, max 20 líneas por función,
 async/await siempre, sin código sync en handlers.
 ```

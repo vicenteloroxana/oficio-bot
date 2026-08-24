@@ -2,18 +2,19 @@
 
 Bot de Telegram para trabajadores de oficio (plomeros, electricistas,
 pintores, profesores particulares, etc.) que gestionan hoy sus trabajos
-por WhatsApp y cuaderno. Con Oficio Bot arman el presupuesto, cobran la
-seña, reciben recordatorios automáticos si el cliente no paga, y cierran
-el cobro final — **todo sin salir de Telegram**.
+por servicio de mensajería (Telegram) y cuaderno. Con Oficio Bot arman
+el presupuesto, cobran la seña, reciben recordatorios automáticos si el
+cliente no paga, y cierran el cobro final — **todo sin salir de Telegram**.
 
 Proyecto hecho para el concurso **CoderCup T1** de Coderhouse.
 
 ## El problema
 
 Un trabajador independiente arma un presupuesto a mano, lo manda por
-WhatsApp, y después tiene que acordarse solo de quién le debe plata y
-cuándo. No hay registro prolijo, no hay recordatorio automático, y el
-presupuesto casi nunca tiene un formato profesional.
+servicio de mensajería (Telegram), y después tiene que acordarse solo
+de quién le debe plata y cuándo. No hay registro prolijo, no hay
+recordatorio automático, y el presupuesto casi nunca tiene un formato
+profesional.
 
 ## Qué resuelve Oficio Bot
 

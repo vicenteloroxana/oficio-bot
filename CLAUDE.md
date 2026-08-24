@@ -193,8 +193,8 @@ Trabajador: [Sí]
 Bot: ✅ Listo, te aviso si no llega el pago a tiempo.
 ```
 > Nota: en fase 1, sin Mercado Pago, "mandar el presupuesto" es un paso
-> manual del trabajador (por WhatsApp, en persona, etc.) — el bot no lo
-> sabe hasta que el trabajador confirma con el botón. Esa confirmación
+> manual del trabajador (reenviando el PDF fuera del bot, en persona, etc.)
+> — el bot no lo sabe hasta que el trabajador confirma con el botón. Esa confirmación
 > es lo que pasa el trabajo a `sena_enviada` y arranca el conteo de
 > `REMINDER_DAYS` para el recordatorio automático (ver Momento 2 y
 > ADR-004). Este paso solo aparece si se pidió seña (`monto_sena > 0`);
@@ -519,4 +519,5 @@ MAX_LOGO_SIZE_MB=2         # Tamaño máximo de logo en MB
 Este bot fue diseñado para el concurso CoderCamp IA de Coderhouse.
 El criterio de evaluación prioriza impacto real sobre complejidad técnica.
 El público objetivo son trabajadores informales argentinos que hoy gestionan
-todo por WhatsApp y cuaderno — sin herramientas digitales de gestión.
+todo por servicio de mensajería (Telegram) y cuaderno — sin herramientas
+digitales de gestión.

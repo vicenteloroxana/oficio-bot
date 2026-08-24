@@ -76,14 +76,36 @@ un ítem, marcalo en el mismo PR que lo implementa — no en un commit aparte.
 - [x] `database.get_resumen_mensual` — query agregada por mes (cobrado / pendiente / sin seña)
 - [x] Formato de salida según mockup de `CLAUDE.md`
 
-## Momento 5 — Historial de clientes (`/clientes`)
+## Estado `cancelado` — presupuesto rechazado por el cliente
 
-Diferido: se prioriza Momento 6 primero (ver backlog reordenado).
+- [x] `RespuestaRecordatorio.CLIENTE_NO_ACEPTO` (`database/models.py`) y
+      `marcar_cancelado` (`database/db.py`), compartida por los dos puntos
+      de entrada de abajo — pasa el trabajo a `estado = cancelado`
+- [x] Botón `[Cliente no aceptó]` en el recordatorio automático (Momento 2)
+- [x] `/pendientes`: mismo botón por cada trabajo listado, para cancelar
+      antes de que dispare el recordatorio automático
+- [x] `/resumen` y `/clientes` excluyen `cancelado` de sus agregados
+      (visible en el detalle de `/clientes`, sin sumar a los totales)
+- [x] Tests (`tests/test_recordatorio.py`, `tests/test_pendientes.py`)
 
-- [ ] `handlers/clientes.py` — listar clientes con totales
-- [ ] Detalle por cliente al seleccionar uno
+## Momento 5 — Trabajos pendientes de cobro (`/pendientes`)
 
-## Momento 6 — Configurar perfil (`/perfil`)
+- [x] `handlers/pendientes.py` — lista trabajos sin cobrar del todo,
+      reusa `get_trabajos_pendientes` (ya usada por `/cobrar`)
+- [x] Botón `[Cliente no aceptó]` por trabajo (ver sección de arriba)
+- [x] Tests (`tests/test_pendientes.py`)
+
+## Momento 6 — Historial de clientes (`/clientes`)
+
+- [x] `handlers/clientes.py` — listar clientes con agregado (cantidad de
+      trabajos, monto cobrado, si tiene algo pendiente)
+- [x] Detalle por cliente al seleccionar uno (`get_trabajos_de_cliente`,
+      incluye cancelados sin sumarlos a los totales)
+- [x] `get_clientes_resumen` excluye de la lista principal los clientes
+      cuyo único trabajo fue cancelado
+- [x] Tests (`tests/test_clientes.py`)
+
+## Momento 7 — Configurar perfil (`/perfil`)
 
 - [x] Ver perfil actual (nombre, oficio, logo) — `handlers/perfil.py`
 - [x] Editar nombre / oficio — `database.actualizar_usuario`
